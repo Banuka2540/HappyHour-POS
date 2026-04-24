@@ -28,7 +28,21 @@ const MENU = [
 const CATEGORIES = ["All", ...new Set(MENU.map(i => i.cat))];
 const fmt = (n) => `Rs. ${Number(n).toLocaleString("en", { minimumFractionDigits: 2 })}`;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4242";
-const ORDER_API_BASE_URL = import.meta.env.VITE_ORDER_API_BASE_URL || "";
+const resolveOrderApiBaseUrl = () => {
+  const configured = (import.meta.env.VITE_ORDER_API_BASE_URL || "").trim();
+
+  // In production, never force requests to localhost; fall back to same-origin serverless routes.
+  if (
+    import.meta.env.PROD
+    && configured
+    && /^http:\/\/localhost(?::\d+)?$/i.test(configured)
+  ) {
+    return "";
+  }
+
+  return configured.replace(/\/+$/, "");
+};
+const ORDER_API_BASE_URL = resolveOrderApiBaseUrl();
 const ADMIN_PIN = "254010@";
 const SALE_DRAFT_KEY = "happy-hour-pending-card-sale";
 const LEDGER_KEYS = {

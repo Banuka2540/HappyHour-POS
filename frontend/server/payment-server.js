@@ -14,6 +14,10 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PAYMENT_PORT || 4242);
 const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+const clientUrls = (process.env.CLIENT_URLS || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -107,7 +111,19 @@ const appendSaleToWorkbook = async (sale) => {
   xlsx.writeFile(workbook, salesWorkbookPath);
 };
 
-app.use(cors({ origin: clientUrl }));
+const allowedOrigins = new Set([clientUrl, ...clientUrls]);
+const isVercelPreviewOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin) || isVercelPreviewOrigin(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
+}));
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
