@@ -86,6 +86,23 @@ const formatItemsJson = (items) => {
   }
 };
 
+const getHeaderValuesSafe = (sheet) => {
+  try {
+    return Array.isArray(sheet.headerValues) ? sheet.headerValues : [];
+  } catch {
+    return [];
+  }
+};
+
+const ensureSheetHeaders = async (sheet) => {
+  await sheet.loadHeaderRow().catch(() => null);
+  if (getHeaderValuesSafe(sheet).length === 0) {
+    await sheet.setHeaderRow(ORDER_HEADERS);
+    await sheet.loadHeaderRow().catch(() => null);
+  }
+  return sheet;
+};
+
 const ensureOrderSheet = async (spreadsheet) => {
   await spreadsheet.loadInfo();
 
@@ -93,32 +110,21 @@ const ensureOrderSheet = async (spreadsheet) => {
 
   if (configuredSheetTitle && spreadsheet.sheetsByTitle[configuredSheetTitle]) {
     const configuredSheet = spreadsheet.sheetsByTitle[configuredSheetTitle];
-    await configuredSheet.loadHeaderRow().catch(() => null);
-    if (!configuredSheet.headerValues || configuredSheet.headerValues.length === 0) {
-      await configuredSheet.setHeaderRow(ORDER_HEADERS);
-    }
-    return configuredSheet;
+    return ensureSheetHeaders(configuredSheet);
   }
 
   const existingOrdersSheet = spreadsheet.sheetsByTitle[DEFAULT_ORDER_SHEET_TITLE];
   if (existingOrdersSheet) {
-    await existingOrdersSheet.loadHeaderRow().catch(() => null);
-    if (!existingOrdersSheet.headerValues || existingOrdersSheet.headerValues.length === 0) {
-      await existingOrdersSheet.setHeaderRow(ORDER_HEADERS);
-    }
-    return existingOrdersSheet;
+    return ensureSheetHeaders(existingOrdersSheet);
   }
 
   const firstSheet = spreadsheet.sheetsByIndex?.[0];
   if (firstSheet) {
-    await firstSheet.loadHeaderRow().catch(() => null);
-    if (!firstSheet.headerValues || firstSheet.headerValues.length === 0) {
-      await firstSheet.setHeaderRow(ORDER_HEADERS);
-    }
-    return firstSheet;
+    return ensureSheetHeaders(firstSheet);
   }
 
-  return spreadsheet.addSheet({ title: configuredSheetTitle || DEFAULT_ORDER_SHEET_TITLE, headerValues: ORDER_HEADERS });
+  const createdSheet = await spreadsheet.addSheet({ title: configuredSheetTitle || DEFAULT_ORDER_SHEET_TITLE, headerValues: ORDER_HEADERS });
+  return ensureSheetHeaders(createdSheet);
 };
 
 const toOrderRow = (order = {}) => {
@@ -151,6 +157,7 @@ const toOrderRow = (order = {}) => {
 export const appendOrderToGoogleSheet = async (order) => {
   const spreadsheet = buildSpreadsheet();
   const sheet = await ensureOrderSheet(spreadsheet);
+  await ensureSheetHeaders(sheet);
   const row = toOrderRow(order);
   const insertedRow = await sheet.addRow(row);
 
