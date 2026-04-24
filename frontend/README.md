@@ -57,3 +57,5 @@ Set these environment variables in your deployment environment:
 If your private key is stored with escaped newlines, keep the literal `\n` characters in the env value. The server helper normalizes them before authentication.
 
 In local development, the same route is also available through `npm run dev:server`.
+
+If `POST /api/orders` returns `500` on Vercel, verify these same variables are set in Vercel Project Settings and redeploy so the serverless function picks up the new values.

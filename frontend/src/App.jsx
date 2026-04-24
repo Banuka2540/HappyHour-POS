@@ -808,9 +808,18 @@ export default function HappyHourPOS() {
       });
 
       if (!response.ok) {
-        throw new Error("Unable to submit order");
+        let detail = "";
+        try {
+          const errorBody = await response.json();
+          detail = errorBody?.detail || errorBody?.error || "";
+        } catch {
+          // Ignore JSON parsing errors from non-JSON error responses.
+        }
+        throw new Error(detail || "Unable to submit order");
       }
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Google Sheet sync failed";
+      console.error("Google Sheet sync failed:", message);
       showToast("⚠️ Payment saved, but Google Sheet sync failed", true);
     }
   }, [showToast]);
