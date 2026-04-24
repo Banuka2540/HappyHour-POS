@@ -213,7 +213,12 @@ app.post("/api/orders", async (req, res) => {
     });
   } catch (error) {
     console.error("orders append failed", error);
-    return res.status(500).json({ error: "Failed to append order to Google Sheet" });
+    const detail = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({
+      error: "Failed to append order to Google Sheet",
+      detail,
+      hint: "Verify GOOGLE_SHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, and share the sheet with the service account as Editor.",
+    });
   }
 });
 
