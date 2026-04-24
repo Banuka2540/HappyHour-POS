@@ -43,3 +43,17 @@ Frontend runs on `http://localhost:5173` and payment server runs on `http://loca
 4. Admin dashboard POS Sales updates after payment verification.
 
 For Stripe test payments, use Stripe test card numbers from Stripe docs (for example `4242 4242 4242 4242`).
+
+## Google Sheets Order Sync
+
+Order submissions are now posted to `POST /api/orders` and appended to a Google Sheet.
+
+Set these environment variables in your deployment environment:
+
+- `GOOGLE_SHEET_ID`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_PRIVATE_KEY`
+
+If your private key is stored with escaped newlines, keep the literal `\n` characters in the env value. The server helper normalizes them before authentication.
+
+In local development, the same route is also available through `npm run dev:server`.

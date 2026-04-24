@@ -28,7 +28,9 @@ const MENU = [
 const CATEGORIES = ["All", ...new Set(MENU.map(i => i.cat))];
 const fmt = (n) => `Rs. ${Number(n).toLocaleString("en", { minimumFractionDigits: 2 })}`;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4242";
+const ORDER_API_BASE_URL = import.meta.env.VITE_ORDER_API_BASE_URL || "";
 const ADMIN_PIN = "254010@";
+const SALE_DRAFT_KEY = "happy-hour-pending-card-sale";
 const LEDGER_KEYS = {
   income: "happy-hour-income-ledger",
   expenses: "happy-hour-expense-ledger",
@@ -92,6 +94,64 @@ const printReceipt = (receiptData) => {
     w.close();
   }, 300);
   return true;
+};
+
+const createSaleSnapshot = ({ order = [], discount = "", serviceType = "Dining", note = "", amount = 0, method = "Payment", source = "pos", receiptEmail = "", stripeSessionId = "", paymentStatus = "paid" }) => {
+  const subtotal = order.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const discountPercent = Math.min(100, Math.max(0, parseFloat(discount) || 0));
+  const discountAmount = subtotal * discountPercent / 100;
+  const taxable = subtotal - discountAmount;
+  const tax = taxable * 0.1;
+  const total = Number.isFinite(Number(amount)) && Number(amount) > 0 ? Number(amount) : taxable + tax;
+  const saleDate = todayKey();
+
+  return {
+    saleId: `sale-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    saleDate,
+    timestamp: new Date().toISOString(),
+    paymentMethod: method || "Payment",
+    orderType: serviceType || "Dining",
+    items: order.map(item => `${item.name} x${item.qty}`).join(" | "),
+    itemsJson: order,
+    subtotal,
+    discountPercent,
+    discountAmount,
+    tax,
+    total,
+    note: note || "",
+    source,
+    stripeSessionId,
+    paymentStatus,
+    receiptEmail,
+  };
+};
+
+const readSaleDraft = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SALE_DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeSaleDraft = (sale) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SALE_DRAFT_KEY, JSON.stringify(sale));
+  } catch {
+    // Ignore storage failures in unsupported environments.
+  }
+};
+
+const clearSaleDraft = () => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(SALE_DRAFT_KEY);
+  } catch {
+    // Ignore storage failures in unsupported environments.
+  }
 };
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
@@ -725,7 +785,23 @@ export default function HappyHourPOS() {
   const total   = taxable + tax;
   const pendingOrderAmount = order.length > 0 && modal === null ? total : 0;
 
-  const handlePaySuccess = useCallback(({ amount, method }) => {
+  const submitSaleToGoogleSheet = useCallback(async (sale) => {
+    try {
+      const response = await fetch(`${ORDER_API_BASE_URL}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sale),
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to submit order");
+      }
+    } catch {
+      showToast("⚠️ Payment saved, but Google Sheet sync failed", true);
+    }
+  }, [showToast]);
+
+  const handlePaySuccess = useCallback(({ amount, method, saleDetails }) => {
     const entry = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       amount: Number(amount) || 0,
@@ -734,11 +810,28 @@ export default function HappyHourPOS() {
       createdAt: new Date().toISOString(),
     };
     setIncomeEntries(prev => [entry, ...prev]);
+    void submitSaleToGoogleSheet({
+      ...(saleDetails || {}),
+      saleId: saleDetails?.saleId || entry.id,
+      saleDate: saleDetails?.saleDate || todayKey(),
+      timestamp: saleDetails?.timestamp || entry.createdAt,
+      paymentMethod: method || saleDetails?.paymentMethod || "Payment",
+      total: Number(amount) || saleDetails?.total || 0,
+    });
     showToast(`✅ ${entry.method} payment recorded`);
-  }, [showToast]);
+  }, [submitSaleToGoogleSheet, showToast]);
 
   const handleCashPaySuccess = ({ amount, method }) => {
-    handlePaySuccess({ amount, method });
+    const saleDetails = createSaleSnapshot({
+      order,
+      discount,
+      serviceType,
+      note,
+      amount,
+      method,
+      source: "cash",
+    });
+    handlePaySuccess({ amount, method, saleDetails });
     const didOpen = printReceipt({ order, discount, serviceType, note });
     if (!didOpen) {
       showToast("⚠️ Auto print blocked. Please allow popups.", true);
@@ -775,6 +868,17 @@ export default function HappyHourPOS() {
         throw new Error("Checkout URL not received");
       }
 
+      writeSaleDraft(createSaleSnapshot({
+        order,
+        discount,
+        serviceType,
+        note,
+        amount: total,
+        method: "Card",
+        source: "card",
+        receiptEmail: receiptEmail || "",
+      }));
+
       window.location.href = data.url;
     } catch {
       showToast("❌ Card checkout failed. Check payment server settings.", true);
@@ -807,7 +911,23 @@ export default function HappyHourPOS() {
           throw new Error("Payment not completed");
         }
 
-        handlePaySuccess({ amount: (session.amount_total || 0) / 100, method: "Card" });
+        const draft = readSaleDraft();
+        const amount = (session.amount_total || 0) / 100;
+        const saleDetails = draft || createSaleSnapshot({
+          amount,
+          method: "Card",
+          source: "card",
+          serviceType,
+        });
+
+        clearSaleDraft();
+        handlePaySuccess({ amount, method: "Card", saleDetails: {
+          ...saleDetails,
+          amount,
+          total: amount,
+          paymentStatus: session.payment_status,
+          stripeSessionId: session.id,
+        } });
         clearOrder();
         setModal(null);
         window.localStorage.setItem(processedKey, "1");
@@ -819,7 +939,7 @@ export default function HappyHourPOS() {
     };
 
     verifyPayment();
-  }, [clearOrder, handlePaySuccess, showToast]);
+  }, [clearOrder, handlePaySuccess, serviceType, showToast]);
 
   const handleAddExpense = (entry) => {
     setExpenseEntries(prev => [entry, ...prev]);
