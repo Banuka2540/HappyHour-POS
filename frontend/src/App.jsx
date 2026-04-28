@@ -81,11 +81,23 @@ const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
   const total = taxable * 1.1;
 
   return `<html><head><title>Happy Hour Receipt</title>
-    <style>body{font-family:'Courier New',monospace;font-size:12px;width:300px;margin:0 auto;padding:20px}
-    h2{color:#D4A017;font-size:18px}.r{display:flex;justify-content:space-between;margin:3px 0}
-    hr{border:none;border-top:1px dashed #999;margin:8px 0}.total{font-weight:bold;font-size:15px}
-    .center{text-align:center}@media print{body{margin:0}}</style></head><body>
-    <div class="center"><h2>🍹 Happy Hour</h2><p>Fine Dining &amp; Bar</p></div><hr>
+    <style>
+      body{font-family:'Courier New',monospace;font-size:12px;width:72.1mm;margin:0;padding:0}
+      .receipt{width:72.1mm;margin:0;padding:0 4px 6px;box-sizing:border-box;font-weight:700;color:#000000}
+      h2{color:#000000;font-size:18px;margin:0;padding-top:0}
+      .r{display:flex;justify-content:space-between;margin:3px 0;color:#000000}
+      hr{border:none;border-top:1px dashed #000000;margin:6px 0}
+      .total{font-weight:700;font-size:15px}
+      .center{text-align:center;color:#000000}
+      @media print{body{margin:0} .receipt{font-weight:700}}
+    </style></head><body>
+    <div class="receipt">
+      <div class="center"><h2>🍹 Happy Hour</h2>
+        <div>Restaurant &amp; Cafe</div>
+        <div>417, Peradeniya Road, Kandy</div>
+        <div>0774451516</div>
+      </div>
+      <hr>
     ${order.map(o=>`<div class="r"><span>${o.name} x${o.qty}</span><span>Rs.${(o.price*o.qty).toLocaleString()}</span></div>`).join("")}
     <hr>
     ${disc>0?`<div class="r"><span>Discount(${disc}%)</span><span>-Rs.${discAmt.toLocaleString("en",{minimumFractionDigits:2})}</span></div>`:""}
@@ -94,6 +106,13 @@ const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
     ${note ? `<div class="r"><span>Note</span><span>${note}</span></div>` : ""}
     <div class="r"><span>Order Type</span><span>${serviceType}</span></div>
     <hr><div class="center" style="font-size:10px">Thank you! Please come again 🍹</div>
+
+    <!-- QR Code -->
+    <div class="center" style="margin-top:8px">
+      <img src="/1.png" alt="QR" style="width:90px;height:90px;display:block;margin:0 auto" />
+      <div style="margin-top:6px;font-size:11px;font-weight:700;color:#000000">Visit our website</div>
+    </div>
+
     </body></html>`;
 };
 
@@ -319,14 +338,15 @@ function Receipt({ order, discount, serviceType, note }) {
   const orderId = "HH-" + Math.floor(Math.random() * 9000 + 1000);
 
   return (
-    <div style={{ background:"#fff", color:"#1A1108", borderRadius:8, padding:20,
-      fontFamily:"'Courier New',monospace", fontSize:12 }}>
-      <div style={{ textAlign:"center", marginBottom:12 }}>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, color:G.gold }}>🍹 Happy Hour</div>
-        <div style={{ fontSize:10, color:"#666" }}>Fine Dining &amp; Bar</div>
-        <div style={{ fontSize:10, color:"#666" }}>Tel: +94 11 234 5678 | happyhour.lk</div>
+    <div style={{ background:"#fff", color:"#000000", borderRadius:8, padding:"6px 12px",
+      fontFamily:"'Courier New',monospace", fontSize:12, fontWeight:700 }}>
+      <div style={{ textAlign:"center", marginBottom:12, marginTop:0, paddingTop:0 }}>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, color:"#000000" }}>HAPPY HOUR</div>
+        <div style={{ fontSize:10, color:"#000000" }}>Restaurant &amp; Cafe</div>
+        <div style={{ fontSize:10, color:"#000000" }}>417, Peradeniya Road, Kandy</div>
+        <div style={{ fontSize:10, color:"#000000" }}>0774451516</div>
       </div>
-      <hr style={{ border:"none", borderTop:"1px dashed #ccc", margin:"8px 0" }} />
+      <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
       {[["Order #", orderId], ["Order Type", serviceType],
         ["Date", now.toLocaleDateString("en-GB")],
         ["Time", now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})],
@@ -336,7 +356,7 @@ function Receipt({ order, discount, serviceType, note }) {
           <span>{k}</span><span>{v}</span>
         </div>
       ))}
-      <hr style={{ border:"none", borderTop:"1px dashed #ccc", margin:"8px 0" }} />
+      <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
       <div style={{ fontWeight:"bold", marginBottom:6 }}>ITEMS</div>
       {order.map(o => (
         <div key={o.id} style={{ display:"flex", justifyContent:"space-between", margin:"3px 0" }}>
@@ -344,7 +364,7 @@ function Receipt({ order, discount, serviceType, note }) {
           <span>Rs. {(o.price*o.qty).toLocaleString()}</span>
         </div>
       ))}
-      <hr style={{ border:"none", borderTop:"1px dashed #ccc", margin:"8px 0" }} />
+      <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
       <div style={{ display:"flex", justifyContent:"space-between", margin:"3px 0" }}>
         <span>Subtotal</span><span>{fmt(sub)}</span>
       </div>
@@ -356,13 +376,25 @@ function Receipt({ order, discount, serviceType, note }) {
       <div style={{ display:"flex", justifyContent:"space-between", margin:"3px 0" }}>
         <span>Tax (10%)</span><span>{fmt(tax)}</span>
       </div>
-      <hr style={{ border:"none", borderTop:"1px dashed #ccc", margin:"8px 0" }} />
+      <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
       <div style={{ display:"flex", justifyContent:"space-between", fontWeight:"bold", fontSize:14 }}>
         <span>TOTAL</span><span>{fmt(total)}</span>
       </div>
-      <hr style={{ border:"none", borderTop:"1px dashed #ccc", margin:"8px 0" }} />
-      <div style={{ textAlign:"center", marginTop:10, fontSize:10, color:"#888" }}>
+      <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
+      <div style={{ textAlign:"center", marginTop:10, fontSize:10, color:"#000000" }}>
         Thank you for dining with us!<br/>Please visit again 🍹<br/>*All prices inclusive of service charge*
+      </div>
+      
+      {/* Website QR Code Section */}
+      <div style={{ textAlign: "center", marginTop: 15, marginBottom: 5 }}>
+        <img 
+          src="/1.png" 
+          alt="Website QR Code" 
+          style={{ width: "90px", height: "90px", display: "block", margin: "0 auto" }} 
+        />
+        <div style={{ marginTop: 6, fontSize: 11, color: "#000000", fontWeight: "bold" }}>
+          Visit our website
+        </div>
       </div>
     </div>
   );
