@@ -2,28 +2,155 @@ import { useState, useEffect, useCallback } from "react";
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const MENU = [
-  { id:1,  name:"Crispy Calamari",   cat:"Starters",  price:890,  emoji:"🦑", tag:"" },
-  { id:2,  name:"Bruschetta",        cat:"Starters",  price:650,  emoji:"🥖", tag:"Popular" },
-  { id:3,  name:"Spring Rolls",      cat:"Starters",  price:750,  emoji:"🥢", tag:"" },
-  { id:4,  name:"Chicken Wings",     cat:"Starters",  price:1100, emoji:"🍗", tag:"Hot" },
-  { id:5,  name:"Garlic Bread",      cat:"Starters",  price:420,  emoji:"🫓", tag:"" },
-  { id:6,  name:"Nachos Platter",    cat:"Starters",  price:980,  emoji:"🧀", tag:"" },
-  { id:7,  name:"Grilled Salmon",    cat:"Mains",     price:2400, emoji:"🐟", tag:"Chef's Pick" },
-  { id:8,  name:"Beef Burger",       cat:"Mains",     price:1650, emoji:"🍔", tag:"Popular" },
-  { id:9,  name:"Pasta Carbonara",   cat:"Mains",     price:1400, emoji:"🍝", tag:"" },
-  { id:10, name:"Chicken Tikka",     cat:"Mains",     price:1800, emoji:"🍛", tag:"" },
-  { id:11, name:"Club Sandwich",     cat:"Mains",     price:1200, emoji:"🥪", tag:"" },
-  { id:12, name:"Veggie Pizza",      cat:"Mains",     price:1550, emoji:"🍕", tag:"" },
-  { id:13, name:"Mojito",            cat:"Drinks",    price:680,  emoji:"🍹", tag:"Popular" },
-  { id:14, name:"Draft Beer",        cat:"Drinks",    price:550,  emoji:"🍺", tag:"" },
-  { id:15, name:"Fresh Lime Soda",   cat:"Drinks",    price:320,  emoji:"🍋", tag:"" },
-  { id:16, name:"Mango Lassi",       cat:"Drinks",    price:380,  emoji:"🥭", tag:"" },
-  { id:17, name:"Cold Coffee",       cat:"Drinks",    price:450,  emoji:"☕", tag:"" },
-  { id:18, name:"Watermelon Juice",  cat:"Drinks",    price:350,  emoji:"🍉", tag:"" },
-  { id:19, name:"Chocolate Lava",    cat:"Desserts",  price:780,  emoji:"🍫", tag:"Popular" },
-  { id:20, name:"Cheesecake",        cat:"Desserts",  price:720,  emoji:"🍰", tag:"" },
-  { id:21, name:"Tiramisu",          cat:"Desserts",  price:850,  emoji:"🎂", tag:"" },
-  { id:22, name:"Ice Cream Scoop",   cat:"Desserts",  price:380,  emoji:"🍨", tag:"" },
+  // Malaysian Nasi Goreng
+  { id: 1, name: "Sausage & Egg", cat: "Malaysian Nasi Goreng", price: 1690, emoji: "", tag: "" },
+  { id: 2, name: "Mushroom & Egg", cat: "Malaysian Nasi Goreng", price: 1690, emoji: "", tag: "" },
+  { id: 3, name: "Chicken & Sausage", cat: "Malaysian Nasi Goreng", price: 1890, emoji: "", tag: "" },
+  { id: 4, name: "Chicken", cat: "Malaysian Nasi Goreng", price: 1790, emoji: "", tag: "" },
+  { id: 5, name: "Prawns", cat: "Malaysian Nasi Goreng", price: 2000, emoji: "", tag: "" },
+  { id: 6, name: "Seafood", cat: "Malaysian Nasi Goreng", price: 2290, emoji: "", tag: "" },
+  { id: 7, name: "Mixed", cat: "Malaysian Nasi Goreng", price: 2490, emoji: "", tag: "" },
+
+  // Submarines
+  { id: 8, name: "Crispy Chicken Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+  { id: 9, name: "Chicken Sausage Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+  { id: 10, name: "Kebab Chicken Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+  { id: 11, name: "Chilli Chicken Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+  { id: 12, name: "Crispy Prawn Submarine", cat: "Submarines", price: 1500, emoji: "", tag: "" },
+  { id: 13, name: "Mushroom Submarine", cat: "Submarines", price: 900, emoji: "", tag: "" },
+  { id: 14, name: "Meatball Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+  { id: 15, name: "Egg & Cheese Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+
+  // Club Sandwiches
+  { id: 16, name: "Club Sandwich - Egg", cat: "Club Sandwiches", price: 990, emoji: "", tag: "" },
+  { id: 17, name: "Club Sandwich - Chicken", cat: "Club Sandwiches", price: 1490, emoji: "", tag: "" },
+  { id: 18, name: "Club Sandwich - Oyster Mushroom", cat: "Club Sandwiches", price: 1000, emoji: "", tag: "" },
+  { id: 19, name: "Club Sandwich - Seafood", cat: "Club Sandwiches", price: 1690, emoji: "", tag: "" },
+  { id: 20, name: "Club Sandwich - Double Cheese", cat: "Club Sandwiches", price: 1590, emoji: "", tag: "" },
+  { id: 21, name: "Club Sandwich - Cheese, Chicken & Ham", cat: "Club Sandwiches", price: 1890, emoji: "", tag: "" },
+
+  // Burgers
+  { id: 22, name: "Crispy Chicken Burger", cat: "Burgers", price: 800, emoji: "", tag: "" },
+  { id: 23, name: "Spicy Chicken Burger", cat: "Burgers", price: 900, emoji: "", tag: "" },
+  { id: 24, name: "Double Cheese Burger", cat: "Burgers", price: 1000, emoji: "", tag: "" },
+  { id: 25, name: "Double Chicken Burger", cat: "Burgers", price: 1000, emoji: "", tag: "" },
+  { id: 26, name: "Sweet & Sour Chicken Burger", cat: "Burgers", price: 1100, emoji: "", tag: "" },
+  { id: 27, name: "Chilli Chicken Burger", cat: "Burgers", price: 1000, emoji: "", tag: "" },
+
+  // Fresh Juices
+  { id: 28, name: "Avocado Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 29, name: "Carrot Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 30, name: "Lime Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 31, name: "Orange Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 32, name: "Mango Juice", cat: "Fresh Juices", price: 400, emoji: "", tag: "" },
+  { id: 33, name: "Papaya Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 34, name: "Pineapple Juice", cat: "Fresh Juices", price: 500, emoji: "", tag: "" },
+  { id: 35, name: "Passion Fruit Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 36, name: "Woodapple Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 37, name: "Watermelon Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 38, name: "Mixed Fruit Juice", cat: "Fresh Juices", price: 450, emoji: "", tag: "" },
+  { id: 39, name: "Lemon Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+  { id: 40, name: "Soursop (Anoda) Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
+
+  // Bubble Tea
+  { id: 41, name: "Chocolate Bubble Tea", cat: "Bubble Tea", price: 1200, emoji: "", tag: "" },
+  { id: 42, name: "Oreo Bubble Tea", cat: "Bubble Tea", price: 1400, emoji: "", tag: "" },
+  { id: 43, name: "Vanilla Bubble Tea", cat: "Bubble Tea", price: 1200, emoji: "", tag: "" },
+  { id: 44, name: "Milo Bubble Tea", cat: "Bubble Tea", price: 1200, emoji: "", tag: "" },
+
+  // Shakes
+  { id: 45, name: "Vanilla Milkshake", cat: "Shakes", price: 350, emoji: "", tag: "" },
+  { id: 46, name: "Chocolate Milkshake", cat: "Shakes", price: 450, emoji: "", tag: "" },
+  { id: 47, name: "Strawberry Milkshake", cat: "Shakes", price: 350, emoji: "", tag: "" },
+  { id: 48, name: "Mango Milkshake", cat: "Shakes", price: 450, emoji: "", tag: "" },
+  { id: 49, name: "Banana Milkshake", cat: "Shakes", price: 350, emoji: "", tag: "" },
+  { id: 50, name: "Faluda", cat: "Shakes", price: 450, emoji: "", tag: "" },
+  { id: 51, name: "Iced Coffee", cat: "Shakes", price: 450, emoji: "", tag: "" },
+  { id: 52, name: "Iced Milo", cat: "Shakes", price: 450, emoji: "", tag: "" },
+  { id: 53, name: "Sweet Lassi", cat: "Shakes", price: 350, emoji: "", tag: "" },
+  { id: 54, name: "Salt Lassi", cat: "Shakes", price: 350, emoji: "", tag: "" },
+
+  // Mojitos
+  { id: 55, name: "Passion Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+  { id: 56, name: "Pineapple Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+  { id: 57, name: "Blackcurrant Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+  { id: 58, name: "Lime & Mint Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+  { id: 59, name: "Orange Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+  { id: 60, name: "Virgin Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+  { id: 61, name: "Watermelon Mojito", cat: "Mojitos", price: 500, emoji: "", tag: "" },
+
+  // Smoothies
+  { id: 62, name: "Mango Smoothie", cat: "Smoothies", price: 1000, emoji: "", tag: "" },
+  { id: 63, name: "Banana Smoothie", cat: "Smoothies", price: 1000, emoji: "", tag: "" },
+  { id: 64, name: "Avocado Smoothie", cat: "Smoothies", price: 1000, emoji: "", tag: "" },
+  { id: 65, name: "Papaya Smoothie", cat: "Smoothies", price: 1000, emoji: "", tag: "" },
+  { id: 66, name: "Pineapple Smoothie", cat: "Smoothies", price: 1000, emoji: "", tag: "" },
+  { id: 67, name: "Chocolate Banana Smoothie", cat: "Smoothies", price: 1100, emoji: "", tag: "" },
+
+  // Tea & Coffee
+  { id: 68, name: "Milk Tea", cat: "Tea & Coffee", price: 150, emoji: "", tag: "" },
+  { id: 69, name: "Plain Tea", cat: "Tea & Coffee", price: 70, emoji: "", tag: "" },
+  { id: 70, name: "Lime Plain Tea", cat: "Tea & Coffee", price: 80, emoji: "", tag: "" },
+  { id: 71, name: "Ginger Tea", cat: "Tea & Coffee", price: 80, emoji: "", tag: "" },
+  { id: 72, name: "Green Tea", cat: "Tea & Coffee", price: 80, emoji: "", tag: "" },
+  { id: 73, name: "Masala Tea", cat: "Tea & Coffee", price: 160, emoji: "", tag: "" },
+  { id: 74, name: "Black Coffee", cat: "Tea & Coffee", price: 100, emoji: "", tag: "" },
+  { id: 75, name: "Milk Coffee", cat: "Tea & Coffee", price: 170, emoji: "", tag: "" },
+  { id: 76, name: "Nescafe", cat: "Tea & Coffee", price: 150, emoji: "", tag: "" },
+  { id: 77, name: "Hot Milo", cat: "Tea & Coffee", price: 150, emoji: "", tag: "" },
+
+  // Cold Drinks
+  { id: 78, name: "Coca-Cola", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
+  { id: 79, name: "Pepsi", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
+  { id: 80, name: "Sprite", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
+  { id: 81, name: "Cream Soda", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
+  { id: 82, name: "Ginger Beer", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
+
+  // Desserts
+  { id: 83, name: "Fruit Salad", cat: "Desserts", price: 450, emoji: "", tag: "" },
+  { id: 84, name: "Fruit Salad With Ice-Cream", cat: "Desserts", price: 550, emoji: "", tag: "" },
+  { id: 85, name: "Ice-Cream (Vanilla / Choc)", cat: "Desserts", price: 350, emoji: "", tag: "" },
+  { id: 86, name: "Yogurt", cat: "Desserts", price: 100, emoji: "", tag: "" },
+  { id: 87, name: "Cake", cat: "Desserts", price: 250, emoji: "", tag: "" },
+
+  // Starters
+  { id: 88, name: "Sri Lankan Omelet", cat: "Starters", price: 400, emoji: "", tag: "" },
+  { id: 89, name: "Cheese Omelet", cat: "Starters", price: 600, emoji: "", tag: "" },
+  { id: 90, name: "Onion Rings", cat: "Starters", price: 500, emoji: "", tag: "" },
+  { id: 91, name: "Hot Butter Mushroom", cat: "Starters", price: 1000, emoji: "", tag: "" },
+  { id: 92, name: "Boiled Vegetables", cat: "Starters", price: 900, emoji: "", tag: "" },
+
+  // Salads
+  { id: 93, name: "Veg Salad", cat: "Salads", price: 700, emoji: "", tag: "" },
+  { id: 94, name: "Veg Salad With Fried Eggs", cat: "Salads", price: 1200, emoji: "", tag: "" },
+  { id: 95, name: "Chef's Salad", cat: "Salads", price: 1500, emoji: "", tag: "" },
+
+  // Noodles
+  { id: 96, name: "Chicken Noodles", cat: "Noodles", price: 1200, emoji: "", tag: "" },
+  { id: 97, name: "Egg Noodles", cat: "Noodles", price: 900, emoji: "", tag: "" },
+  { id: 98, name: "Mixed Noodles", cat: "Noodles", price: 1500, emoji: "", tag: "" },
+
+  // Rice & Curry
+  { id: 99, name: "Rice & Curry Vegetable", cat: "Rice & Curry", price: 350, emoji: "", tag: "" },
+  { id: 100, name: "Rice & Curry Egg", cat: "Rice & Curry", price: 450, emoji: "", tag: "" },
+  { id: 101, name: "Rice & Curry Chicken", cat: "Rice & Curry", price: 500, emoji: "", tag: "" },
+  { id: 102, name: "Rice & Curry Fish", cat: "Rice & Curry", price: 500, emoji: "", tag: "" },
+
+  // Fried Rice
+  { id: 103, name: "Chicken Fried Rice", cat: "Fried Rice", price: 1500, emoji: "", tag: "" },
+  { id: 104, name: "Fish Fried Rice", cat: "Fried Rice", price: 1700, emoji: "", tag: "" },
+  { id: 105, name: "Devilled Chicken Fried Rice", cat: "Fried Rice", price: 1600, emoji: "", tag: "" },
+  { id: 106, name: "Egg Fried Rice", cat: "Fried Rice", price: 1200, emoji: "", tag: "" },
+  { id: 107, name: "Seafood Fried Rice", cat: "Fried Rice", price: 1800, emoji: "", tag: "" },
+  { id: 108, name: "Mixed Fried Rice", cat: "Fried Rice", price: 1800, emoji: "", tag: "" },
+  { id: 109, name: "Spicy Thai Rice", cat: "Fried Rice", price: 1800, emoji: "", tag: "" },
+  { id: 110, name: "Chop Suey Rice", cat: "Fried Rice", price: 1850, emoji: "", tag: "" },
+
+  // Kottu
+  { id: 111, name: "Chicken Kottu", cat: "Kottu", price: 1200, emoji: "", tag: "" },
+  { id: 112, name: "Cheese Kottu", cat: "Kottu", price: 1600, emoji: "", tag: "" },
+  { id: 113, name: "Mix Kottu", cat: "Kottu", price: 1800, emoji: "", tag: "" },
+  { id: 114, name: "Happy Hour Special Kottu", cat: "Kottu", price: 2000, emoji: "", tag: "" },
 ];
 const CATEGORIES = ["All", ...new Set(MENU.map(i => i.cat))];
 const fmt = (n) => `Rs. ${Number(n).toLocaleString("en", { minimumFractionDigits: 2 })}`;
@@ -777,6 +904,12 @@ export default function HappyHourPOS() {
   const [incomeEntries, setIncomeEntries] = useState(() => readLedger(LEDGER_KEYS.income));
   const [expenseEntries, setExpenseEntries] = useState(() => readLedger(LEDGER_KEYS.expenses));
 
+  // UI sizing: make menu items larger when viewing the full "All" section
+  const itemMin = activeCat === "All" ? 220 : 140;
+  const itemNameSize = activeCat === "All" ? 16 : 13;
+  const itemPriceSize = activeCat === "All" ? 16 : 14;
+  const itemEmojiSize = activeCat === "All" ? 36 : 28;
+
   useEffect(() => {
     const t = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(t);
@@ -1167,27 +1300,29 @@ export default function HappyHourPOS() {
 
         {/* LAYOUT */}
         {activeView === "pos" ? (
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 360px", height:"calc(100vh - 58px)" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"200px 1fr 360px", height:"calc(100vh - 58px)" }}>
 
-          {/* LEFT PANEL */}
-          <div style={{ display:"flex", flexDirection:"column", overflow:"hidden" }}>
-
-            {/* CATEGORIES */}
-            <div style={{ display:"flex", gap:8, padding:"14px 20px", overflowX:"auto",
-              background:G.panel, borderBottom:`1px solid ${G.border}`, scrollbarWidth:"none" }}>
+          {/* SECTIONS / LEFT COLUMN */}
+          <div style={{ display:"flex", flexDirection:"column", overflowY:"auto", background:G.panel, borderRight:`1px solid ${G.border}`, padding:"12px" }}>
+            <div style={{ fontSize:14, fontWeight:700, color:G.muted, marginBottom:8 }}>Sections</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
               {CATEGORIES.map(c => (
                 <button key={c} className="cat-btn" onClick={() => setActiveCat(c)}
-                  style={{ flexShrink:0, padding:"8px 18px", borderRadius:20,
+                  style={{ textAlign:"left", padding:"10px 12px", borderRadius:8,
                     border:`1px solid ${activeCat===c ? G.gold : G.border}`,
                     background: activeCat===c ? G.gold : "transparent",
                     color: activeCat===c ? G.dark : G.muted,
-                    fontSize:13, fontWeight: activeCat===c ? 600 : 500,
+                    fontSize:13, fontWeight: activeCat===c ? 700 : 500,
                     cursor:"pointer", transition:"all 0.2s",
                     fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>
                   {c}
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* MAIN MENU COLUMN */}
+          <div style={{ display:"flex", flexDirection:"column", overflow:"hidden" }}>
 
             {/* SEARCH */}
             <div style={{ padding:"12px 20px", background:G.panel, borderBottom:`1px solid ${G.border}` }}>
@@ -1203,22 +1338,22 @@ export default function HappyHourPOS() {
 
             {/* MENU GRID */}
             <div style={{ flex:1, overflowY:"auto", padding:"16px 20px",
-              display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",
-              gap:12, alignContent:"start",
+              display:"grid", gridTemplateColumns:`repeat(auto-fill,minmax(${itemMin}px,1fr))`,
+              gap:16, alignContent:"start",
               scrollbarWidth:"thin", scrollbarColor:`${G.dark3} transparent` }}>
               {filtered.map(item => (
                 <div key={item.id} className="menu-item" onClick={() => addItem(item)}
                   style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:12,
-                    padding:"14px 12px", cursor:"pointer", transition:"all 0.2s",
+                    padding: activeCat === "All" ? "18px 16px" : "14px 12px", cursor:"pointer", transition:"all 0.2s",
                     position:"relative", overflow:"hidden" }}>
                   {item.tag && (
                     <span style={{ position:"absolute", top:8, right:8, background:G.success,
                       color:"#fff", fontSize:9, fontWeight:700, padding:"2px 6px",
                       borderRadius:4, textTransform:"uppercase", letterSpacing:0.5 }}>{item.tag}</span>
                   )}
-                  <span style={{ fontSize:28, marginBottom:8, display:"block" }}>{item.emoji}</span>
-                  <div style={{ fontSize:13, fontWeight:500, color:G.text, lineHeight:1.3, marginBottom:4 }}>{item.name}</div>
-                  <div style={{ fontSize:14, fontWeight:700, color:G.gold }}>Rs. {item.price.toLocaleString()}</div>
+                  <span style={{ fontSize:itemEmojiSize, marginBottom:8, display:"block" }}>{item.emoji}</span>
+                  <div style={{ fontSize:itemNameSize, fontWeight:500, color:G.text, lineHeight:1.3, marginBottom:6 }}>{item.name}</div>
+                  <div style={{ fontSize:itemPriceSize, fontWeight:700, color:G.gold }}>Rs. {item.price.toLocaleString()}</div>
                 </div>
               ))}
             </div>
