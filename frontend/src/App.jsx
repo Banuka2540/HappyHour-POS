@@ -19,7 +19,7 @@ export default function HappyHourPOS() {
   const [modal, setModal] = useState(null); // 'bill' | 'card' | 'cash'
   const [pendingModalType, setPendingModalType] = useState(null);
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
-  const [toast, setToast] = useState({ msg:"", warn:false });
+  const [toast, setToast] = useState({ msg: "", warn: false });
   const [clock, setClock] = useState(new Date());
   const [showAdminPin, setShowAdminPin] = useState(false);
   const [adminPinChecking, setAdminPinChecking] = useState(false);
@@ -46,23 +46,23 @@ export default function HappyHourPOS() {
     writeLedger(LEDGER_KEYS.expenses, expenseEntries);
   }, [expenseEntries]);
 
-  const showToast = useCallback((msg, warn=false) => {
+  const showToast = useCallback((msg, warn = false) => {
     setToast({ msg, warn });
-    setTimeout(() => setToast({ msg:"", warn:false }), 2200);
+    setTimeout(() => setToast({ msg: "", warn: false }), 2200);
   }, []);
 
   const addItem = (item) => {
     setOrder(prev => {
       const ex = prev.find(o => o.id === item.id);
-      return ex ? prev.map(o => o.id===item.id ? {...o, qty:o.qty+1} : o)
-                : [...prev, {...item, qty:1}];
+      return ex ? prev.map(o => o.id === item.id ? { ...o, qty: o.qty + 1 } : o)
+        : [...prev, { ...item, qty: 1 }];
     });
     showToast(`${item.emoji} ${item.name} added`);
   };
 
   const changeQty = (id, delta) => {
     setOrder(prev => {
-      const updated = prev.map(o => o.id===id ? {...o, qty:o.qty+delta} : o);
+      const updated = prev.map(o => o.id === id ? { ...o, qty: o.qty + delta } : o);
       return updated.filter(o => o.qty > 0);
     });
   };
@@ -79,12 +79,12 @@ export default function HappyHourPOS() {
     return catOk && searchOk;
   });
 
-  const sub     = order.reduce((s,o) => s + o.price*o.qty, 0);
-  const disc    = Math.min(100, Math.max(0, parseFloat(discount)||0));
+  const sub = order.reduce((s, o) => s + o.price * o.qty, 0);
+  const disc = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
-  const tax     = taxable * 0.1;
-  const total   = taxable + tax;
+  const tax = taxable * 0.1;
+  const total = taxable + tax;
   const pendingOrderAmount = order.length > 0 && modal === null ? total : 0;
 
   const submitSaleToGoogleSheet = useCallback(async (sale) => {
@@ -149,7 +149,7 @@ export default function HappyHourPOS() {
     }
   };
 
-  const handlePayClose   = () => { setModal(null); clearOrder(); };
+  const handlePayClose = () => { setModal(null); clearOrder(); };
 
   const startCardCheckout = async (receiptEmail) => {
     if (total <= 0) {
@@ -232,13 +232,15 @@ export default function HappyHourPOS() {
         });
 
         clearSaleDraft();
-        handlePaySuccess({ amount, method: "Card", saleDetails: {
-          ...saleDetails,
-          amount,
-          total: amount,
-          paymentStatus: session.payment_status,
-          stripeSessionId: session.id,
-        } });
+        handlePaySuccess({
+          amount, method: "Card", saleDetails: {
+            ...saleDetails,
+            amount,
+            total: amount,
+            paymentStatus: session.payment_status,
+            stripeSessionId: session.id,
+          }
+        });
         clearOrder();
         setModal(null);
         window.localStorage.setItem(processedKey, "1");
@@ -371,231 +373,286 @@ export default function HappyHourPOS() {
   return (
     <>
       <style>{globalCss}</style>
-      <div style={{ fontFamily:"'DM Sans',sans-serif", background:G.dark, color:G.text,
-        height:"100vh", overflow:"hidden",
-        backgroundImage:`radial-gradient(ellipse at 20% 50%, rgba(212,160,23,0.04) 0%, transparent 60%),
+      <div style={{
+        fontFamily: "'DM Sans',sans-serif", background: G.dark, color: G.text,
+        height: "100vh", overflow: "hidden",
+        backgroundImage: `radial-gradient(ellipse at 20% 50%, rgba(212,160,23,0.04) 0%, transparent 60%),
                          radial-gradient(ellipse at 80% 20%, rgba(212,160,23,0.03) 0%, transparent 50%)` }}>
 
         {/* HEADER */}
-        <header style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
-          padding:"0 24px", height:58, background:G.dark2,
-          borderBottom:`1px solid ${G.border}`, position:"relative", zIndex:10 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:36, height:36, background:G.gold, borderRadius:8,
-              display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🍹</div>
+        <header style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 24px", height: 58, background: G.dark2,
+          borderBottom: `1px solid ${G.border}`, position: "relative", zIndex: 10
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 36, height: 36, background: G.gold, borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18
+            }}>🍹</div>
             <div>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700,
-                color:G.gold, letterSpacing:0.5 }}>Happy Hour</div>
-              <div style={{ fontSize:11, color:G.muted, letterSpacing:2, textTransform:"uppercase" }}>Point of Sale</div>
+              <div style={{
+                fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700,
+                color: G.gold, letterSpacing: 0.5
+              }}>Happy Hour</div>
+              <div style={{ fontSize: 11, color: G.muted, letterSpacing: 2, textTransform: "uppercase" }}>Point of Sale</div>
             </div>
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-            <div style={{ display:"flex", background:G.dark3, border:`1px solid ${G.border}`, borderRadius:12, padding:4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", background: G.dark3, border: `1px solid ${G.border}`, borderRadius: 12, padding: 4 }}>
               {[
-                { id:"pos", label:"POS" },
-                { id:"admin", label:"Admin" },
+                { id: "pos", label: "POS" },
+                { id: "admin", label: "Admin" },
               ].map(view => (
                 <button key={view.id} onClick={() => requestAdminAccess(view.id)} style={{
-                  padding:"6px 12px", border:"none", borderRadius:8, cursor:"pointer",
+                  padding: "6px 12px", border: "none", borderRadius: 8, cursor: "pointer",
                   background: activeView === view.id ? G.gold : "transparent",
                   color: activeView === view.id ? G.dark : G.muted,
-                  fontWeight:700, fontFamily:"'DM Sans',sans-serif"
+                  fontWeight: 700, fontFamily: "'DM Sans',sans-serif"
                 }}>
                   {view.label}
                 </button>
               ))}
             </div>
-            <div style={{ textAlign:"right" }}>
-              <div style={{ fontSize:16, fontWeight:600, color:G.gold,
-                fontFamily:"'Playfair Display',serif" }}>
-                {clock.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}
+            <div style={{ textAlign: "right" }}>
+              <div style={{
+                fontSize: 16, fontWeight: 600, color: G.gold,
+                fontFamily: "'Playfair Display',serif"
+              }}>
+                {clock.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
               </div>
-              <div style={{ fontSize:11, color:G.muted }}>
-                {clock.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}
+              <div style={{ fontSize: 11, color: G.muted }}>
+                {clock.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
               </div>
             </div>
-            <div style={{ background:G.dark3, border:`1px solid ${G.border}`, borderRadius:20,
-              padding:"6px 14px", fontSize:12, color:G.muted }}>
-              Cashier: <span style={{ color:G.text, fontWeight:500 }}>Manager</span>
+            <div style={{
+              background: G.dark3, border: `1px solid ${G.border}`, borderRadius: 20,
+              padding: "6px 14px", fontSize: 12, color: G.muted
+            }}>
+              Cashier: <span style={{ color: G.text, fontWeight: 500 }}>Manager</span>
             </div>
           </div>
         </header>
 
         {/* LAYOUT */}
         {activeView === "pos" ? (
-        <div style={{ display:"grid", gridTemplateColumns:"200px 1fr 360px", height:"calc(100vh - 58px)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 360px", height: "calc(100vh - 58px)" }}>
 
-          {/* SECTIONS / LEFT COLUMN */}
-          <div style={{ display:"flex", flexDirection:"column", overflowY:"auto", background:G.panel, borderRight:`1px solid ${G.border}`, padding:"12px" }}>
-            <div style={{ fontSize:14, fontWeight:700, color:G.muted, marginBottom:8 }}>Sections</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-              {CATEGORIES.map(c => (
-                <button key={c} className="cat-btn" onClick={() => setActiveCat(c)}
-                  style={{ textAlign:"left", padding:"10px 12px", borderRadius:8,
-                    border:`1px solid ${activeCat===c ? G.gold : G.border}`,
-                    background: activeCat===c ? G.gold : "transparent",
-                    color: activeCat===c ? G.dark : G.muted,
-                    fontSize:13, fontWeight: activeCat===c ? 700 : 500,
-                    cursor:"pointer", transition:"all 0.2s",
-                    fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* MAIN MENU COLUMN */}
-          <div style={{ display:"flex", flexDirection:"column", overflow:"hidden" }}>
-
-            {/* SEARCH */}
-            <div style={{ padding:"12px 20px", background:G.panel, borderBottom:`1px solid ${G.border}` }}>
-              <input className="search-input" value={search} onChange={e=>setSearch(e.target.value)}
-                placeholder="Search menu items…"
-                style={{ width:"100%", padding:"9px 16px 9px 38px", borderRadius:8,
-                  border:`1px solid ${G.border}`, background:G.card,
-                  color:G.text, fontSize:13, fontFamily:"'DM Sans',sans-serif",
-                  transition:"border 0.2s",
-                  backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239A8060' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E")`,
-                  backgroundRepeat:"no-repeat", backgroundPosition:"12px center" }} />
-            </div>
-
-            {/* MENU GRID */}
-            <div style={{ flex:1, overflowY:"auto", padding:"16px 20px",
-              display:"grid", gridTemplateColumns:`repeat(auto-fill,minmax(${itemMin}px,1fr))`,
-              gap:16, alignContent:"start",
-              scrollbarWidth:"thin", scrollbarColor:`${G.dark3} transparent` }}>
-              {filtered.map(item => (
-                <div key={item.id} className="menu-item" onClick={() => addItem(item)}
-                  style={{ background:G.card, border:`1px solid ${G.border}`, borderRadius:12,
-                    padding: activeCat === "All" ? "18px 16px" : "14px 12px", cursor:"pointer", transition:"all 0.2s",
-                    position:"relative", overflow:"hidden" }}>
-                  {item.tag && (
-                    <span style={{ position:"absolute", top:8, right:8, background:G.success,
-                      color:"#fff", fontSize:9, fontWeight:700, padding:"2px 6px",
-                      borderRadius:4, textTransform:"uppercase", letterSpacing:0.5 }}>{item.tag}</span>
-                  )}
-                  <span style={{ fontSize:itemEmojiSize, marginBottom:8, display:"block" }}>{item.emoji}</span>
-                  <div style={{ fontSize:itemNameSize, fontWeight:500, color:G.text, lineHeight:1.3, marginBottom:6 }}>{item.name}</div>
-                  <div style={{ fontSize:itemPriceSize, fontWeight:700, color:G.gold }}>Rs. {item.price.toLocaleString()}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* RIGHT PANEL */}
-          <div style={{ background:G.dark2, borderLeft:`1px solid ${G.border}`,
-            display:"flex", flexDirection:"column" }}>
-
-            {/* ORDER HEADER */}
-            <div style={{ padding:"16px 20px 12px", borderBottom:`1px solid ${G.border}`,
-              display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700 }}>Current Order</span>
-              <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                <div style={{ background:G.dark3, border:`1px solid ${G.border}`, color:G.text,
-                  fontSize:12, padding:"5px 10px", borderRadius:6,
-                  fontFamily:"'DM Sans',sans-serif" }}>
-                  Type: {serviceType}
-                </div>
-                <button onClick={clearOrder}
-                  style={{ background:"transparent", border:"1px solid rgba(224,80,80,0.3)",
-                    color:G.danger, fontSize:11, padding:"4px 10px", borderRadius:6,
-                    cursor:"pointer", transition:"all 0.2s", fontFamily:"'DM Sans',sans-serif" }}>
-                  Clear
-                </button>
+            {/* SECTIONS / LEFT COLUMN */}
+            <div style={{ display: "flex", flexDirection: "column", overflowY: "auto", background: G.panel, borderRight: `1px solid ${G.border}`, padding: "12px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: G.muted, marginBottom: 8 }}>Sections</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {CATEGORIES.map(c => (
+                  <button key={c} className="cat-btn" onClick={() => setActiveCat(c)}
+                    style={{
+                      textAlign: "left", padding: "10px 12px", borderRadius: 8,
+                      border: `1px solid ${activeCat === c ? G.gold : G.border}`,
+                      background: activeCat === c ? G.gold : "transparent",
+                      color: activeCat === c ? G.dark : G.muted,
+                      fontSize: 13, fontWeight: activeCat === c ? 700 : 500,
+                      cursor: "pointer", transition: "all 0.2s",
+                      fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap"
+                    }}>
+                    {c}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* ORDER ITEMS */}
-            <div style={{ flex:1, overflowY:"auto", padding:"12px 16px",
-              scrollbarWidth:"thin", scrollbarColor:`${G.dark3} transparent` }}>
-              {order.length === 0 ? (
-                <div style={{ display:"flex", flexDirection:"column", alignItems:"center",
-                  justifyContent:"center", height:"100%", gap:10, color:G.muted }}>
-                  <div style={{ fontSize:40, opacity:0.4 }}>🛒</div>
-                  <div style={{ fontSize:13 }}>No items added yet</div>
-                </div>
-              ) : order.map(o => (
-                <div key={o.id} className="order-item"
-                  style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px",
-                    background:G.card, border:`1px solid ${G.border}`, borderRadius:10,
-                    marginBottom:8 }}>
-                  <span style={{ fontSize:18 }}>{o.emoji}</span>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:13, fontWeight:500 }}>{o.name}</div>
-                    <div style={{ fontSize:12, color:G.muted }}>Rs. {(o.price*o.qty).toLocaleString()}</div>
-                  </div>
-                  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                    <button className="qty-btn" onClick={() => changeQty(o.id,-1)}
-                      style={{ width:22, height:22, borderRadius:"50%", border:`1px solid ${G.border}`,
-                        background:G.dark3, color:G.text, fontSize:14, cursor:"pointer",
-                        display:"flex", alignItems:"center", justifyContent:"center",
-                        transition:"all 0.15s", lineHeight:1 }}>−</button>
-                    <span style={{ fontSize:13, fontWeight:600, minWidth:18, textAlign:"center" }}>{o.qty}</span>
-                    <button className="qty-btn" onClick={() => changeQty(o.id,1)}
-                      style={{ width:22, height:22, borderRadius:"50%", border:`1px solid ${G.border}`,
-                        background:G.dark3, color:G.text, fontSize:14, cursor:"pointer",
-                        display:"flex", alignItems:"center", justifyContent:"center",
-                        transition:"all 0.15s", lineHeight:1 }}>+</button>
-                  </div>
-                  <button className="remove-btn" onClick={() => changeQty(o.id,-o.qty)}
-                    style={{ background:"transparent", border:"none", color:G.muted,
-                      cursor:"pointer", fontSize:16, padding:2, transition:"color 0.15s" }}>🗑</button>
-                </div>
-              ))}
-            </div>
+            {/* MAIN MENU COLUMN */}
+            <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-            {/* SUMMARY */}
-            <div style={{ padding:"14px 16px", borderTop:`1px solid ${G.border}`, background:G.panel }}>
-              {[["Subtotal", fmt(sub)], ["Tax (10%)", fmt(tax)],
-                ["Discount", `-${fmt(discAmt)}`]].map(([k,v]) => (
-                <div key={k} style={{ display:"flex", justifyContent:"space-between",
-                  marginBottom:6, fontSize:13, color:G.muted }}><span>{k}</span><span>{v}</span></div>
-              ))}
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:17,
-                fontWeight:700, color:G.text, marginTop:8, paddingTop:8,
-                borderTop:`1px solid ${G.border}` }}>
-                <span>Total</span>
-                <span style={{ color:G.gold, fontFamily:"'Playfair Display',serif" }}>{fmt(total)}</span>
+              {/* SEARCH */}
+              <div style={{ padding: "12px 20px", background: G.panel, borderBottom: `1px solid ${G.border}` }}>
+                <input className="search-input" value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Search menu items…"
+                  style={{
+                    width: "100%", padding: "9px 16px 9px 38px", borderRadius: 8,
+                    border: `1px solid ${G.border}`, background: G.card,
+                    color: G.text, fontSize: 13, fontFamily: "'DM Sans',sans-serif",
+                    transition: "border 0.2s",
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239A8060' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat", backgroundPosition: "12px center"
+                  }} />
+              </div>
+
+              {/* MENU GRID */}
+              <div style={{
+                flex: 1, overflowY: "auto", padding: "16px 20px",
+                display: "grid", gridTemplateColumns: `repeat(auto-fill,minmax(${itemMin}px,1fr))`,
+                gap: 16, alignContent: "start",
+                scrollbarWidth: "thin", scrollbarColor: `${G.dark3} transparent`
+              }}>
+                {filtered.map(item => (
+                  <div key={item.id} className="menu-item" onClick={() => addItem(item)}
+                    style={{
+                      background: G.card, border: `1px solid ${G.border}`, borderRadius: 12,
+                      padding: activeCat === "All" ? "14px 12px" : "14px 12px", cursor: "pointer", transition: "all 0.2s",
+                      position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: activeCat === "All" ? "120px" : "120px"
+                    }}>
+                    {item.tag && (
+                      <span style={{
+                        position: "absolute", top: 8, right: 8, background: G.success,
+                        color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 6px",
+                        borderRadius: 4, textTransform: "uppercase", letterSpacing: 0.5
+                      }}>{item.tag}</span>
+                    )}
+                    <span style={{ fontSize: itemEmojiSize, marginBottom: 8, display: "block" }}>{item.emoji}</span>
+                    <div style={{ fontSize: itemNameSize, fontWeight: 500, color: G.text, lineHeight: 1.3, marginBottom: 6 }}>{item.name}</div>
+                    <div style={{ fontSize: itemPriceSize, fontWeight: 700, color: G.gold }}>Rs. {item.price.toLocaleString()}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* NOTE + DISCOUNT */}
-            <div style={{ display:"flex", gap:8, padding:"0 16px 12px" }}>
-              <input value={note} onChange={e=>setNote(e.target.value)}
-                placeholder="Order note…"
-                style={{ flex:1, background:G.card, border:`1px solid ${G.border}`,
-                  color:G.text, fontSize:12, padding:"7px 10px", borderRadius:8,
-                  outline:"none", fontFamily:"'DM Sans',sans-serif", transition:"border 0.2s" }} />
-              <input value={discount} onChange={e=>setDiscount(e.target.value)}
-                type="number" min="0" max="100" placeholder="Disc %"
-                style={{ width:80, background:G.card, border:`1px solid ${G.border}`,
-                  color:G.text, fontSize:12, padding:"7px 10px", borderRadius:8,
-                  outline:"none", fontFamily:"'DM Sans',sans-serif", transition:"border 0.2s" }} />
-            </div>
+            {/* RIGHT PANEL */}
+            <div style={{
+              background: G.dark2, borderLeft: `1px solid ${G.border}`,
+              display: "flex", flexDirection: "column"
+            }}>
 
-            {/* ACTION BUTTONS */}
-            <div style={{ display:"flex", gap:10, padding:"0 16px 16px" }}>
-              <button onClick={() => openModal("bill")}
-                style={{ flex:1, padding:"13px 8px", borderRadius:10,
-                  background:G.dark3, border:`1px solid ${G.border}`, color:G.muted,
-                  fontSize:13, fontWeight:600, cursor:"pointer", transition:"all 0.2s",
-                  fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center",
-                  justifyContent:"center", gap:6 }}>🖨️ Bill (F2)</button>
-              <button onClick={() => openModal("card")}
-                style={{ flex:1, padding:"13px 8px", borderRadius:10,
-                  background:"linear-gradient(135deg,#2060C0,#1840A0)",
-                  border:"none", color:"#fff", fontSize:13, fontWeight:600,
-                  cursor:"pointer", transition:"all 0.2s", fontFamily:"'DM Sans',sans-serif",
-                  display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>💳 Card (F3)</button>
-              <button onClick={() => openModal("cash")}
-                style={{ flex:1, padding:"13px 8px", borderRadius:10,
-                  background:`linear-gradient(135deg,${G.gold},#B8880E)`,
-                  border:"none", color:G.dark, fontSize:13, fontWeight:600,
-                  cursor:"pointer", transition:"all 0.2s", fontFamily:"'DM Sans',sans-serif",
-                  display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>💵 Cash (F4)</button>
+              {/* ORDER HEADER */}
+              <div style={{
+                padding: "16px 20px 12px", borderBottom: `1px solid ${G.border}`,
+                display: "flex", alignItems: "center", justifyContent: "space-between"
+              }}>
+                <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 700 }}>Current Order</span>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div style={{
+                    background: G.dark3, border: `1px solid ${G.border}`, color: G.text,
+                    fontSize: 12, padding: "5px 10px", borderRadius: 6,
+                    fontFamily: "'DM Sans',sans-serif"
+                  }}>
+                    Type: {serviceType}
+                  </div>
+                  <button onClick={clearOrder}
+                    style={{
+                      background: "transparent", border: "1px solid rgba(224,80,80,0.3)",
+                      color: G.danger, fontSize: 11, padding: "4px 10px", borderRadius: 6,
+                      cursor: "pointer", transition: "all 0.2s", fontFamily: "'DM Sans',sans-serif"
+                    }}>
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              {/* ORDER ITEMS */}
+              <div style={{
+                flex: 1, overflowY: "auto", padding: "12px 16px",
+                scrollbarWidth: "thin", scrollbarColor: `${G.dark3} transparent`
+              }}>
+                {order.length === 0 ? (
+                  <div style={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    justifyContent: "center", height: "100%", gap: 10, color: G.muted
+                  }}>
+                    <div style={{ fontSize: 40, opacity: 0.4 }}>🛒</div>
+                    <div style={{ fontSize: 13 }}>No items added yet</div>
+                  </div>
+                ) : order.map(o => (
+                  <div key={o.id} className="order-item"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                      background: G.card, border: `1px solid ${G.border}`, borderRadius: 10,
+                      marginBottom: 8
+                    }}>
+                    <span style={{ fontSize: 18 }}>{o.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{o.name}</div>
+                      <div style={{ fontSize: 12, color: G.muted }}>Rs. {(o.price * o.qty).toLocaleString()}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <button className="qty-btn" onClick={() => changeQty(o.id, -1)}
+                        style={{
+                          width: 22, height: 22, borderRadius: "50%", border: `1px solid ${G.border}`,
+                          background: G.dark3, color: G.text, fontSize: 14, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          transition: "all 0.15s", lineHeight: 1
+                        }}>−</button>
+                      <span style={{ fontSize: 13, fontWeight: 600, minWidth: 18, textAlign: "center" }}>{o.qty}</span>
+                      <button className="qty-btn" onClick={() => changeQty(o.id, 1)}
+                        style={{
+                          width: 22, height: 22, borderRadius: "50%", border: `1px solid ${G.border}`,
+                          background: G.dark3, color: G.text, fontSize: 14, cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          transition: "all 0.15s", lineHeight: 1
+                        }}>+</button>
+                    </div>
+                    <button className="remove-btn" onClick={() => changeQty(o.id, -o.qty)}
+                      style={{
+                        background: "transparent", border: "none", color: G.muted,
+                        cursor: "pointer", fontSize: 16, padding: 2, transition: "color 0.15s"
+                      }}>🗑</button>
+                  </div>
+                ))}
+              </div>
+
+              {/* SUMMARY */}
+              <div style={{ padding: "14px 16px", borderTop: `1px solid ${G.border}`, background: G.panel }}>
+                {[["Subtotal", fmt(sub)], ["Tax (10%)", fmt(tax)],
+                ["Discount", `-${fmt(discAmt)}`]].map(([k, v]) => (
+                  <div key={k} style={{
+                    display: "flex", justifyContent: "space-between",
+                    marginBottom: 6, fontSize: 13, color: G.muted
+                  }}><span>{k}</span><span>{v}</span></div>
+                ))}
+                <div style={{
+                  display: "flex", justifyContent: "space-between", fontSize: 17,
+                  fontWeight: 700, color: G.text, marginTop: 8, paddingTop: 8,
+                  borderTop: `1px solid ${G.border}`
+                }}>
+                  <span>Total</span>
+                  <span style={{ color: G.gold, fontFamily: "'Playfair Display',serif" }}>{fmt(total)}</span>
+                </div>
+              </div>
+
+              {/* NOTE + DISCOUNT */}
+              <div style={{ display: "flex", gap: 8, padding: "0 16px 12px" }}>
+                <input value={note} onChange={e => setNote(e.target.value)}
+                  placeholder="Order note…"
+                  style={{
+                    flex: 1, background: G.card, border: `1px solid ${G.border}`,
+                    color: G.text, fontSize: 12, padding: "7px 10px", borderRadius: 8,
+                    outline: "none", fontFamily: "'DM Sans',sans-serif", transition: "border 0.2s"
+                  }} />
+                <input value={discount} onChange={e => setDiscount(e.target.value)}
+                  type="number" min="0" max="100" placeholder="Disc %"
+                  style={{
+                    width: 80, background: G.card, border: `1px solid ${G.border}`,
+                    color: G.text, fontSize: 12, padding: "7px 10px", borderRadius: 8,
+                    outline: "none", fontFamily: "'DM Sans',sans-serif", transition: "border 0.2s"
+                  }} />
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div style={{ display: "flex", gap: 10, padding: "0 16px 16px" }}>
+                <button onClick={() => openModal("bill")}
+                  style={{
+                    flex: 1, padding: "13px 8px", borderRadius: 10,
+                    background: G.dark3, border: `1px solid ${G.border}`, color: G.muted,
+                    fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
+                    fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center",
+                    justifyContent: "center", gap: 6
+                  }}>🖨️ Bill (F2)</button>
+                <button onClick={() => openModal("card")}
+                  style={{
+                    flex: 1, padding: "13px 8px", borderRadius: 10,
+                    background: "linear-gradient(135deg,#2060C0,#1840A0)",
+                    border: "none", color: "#fff", fontSize: 13, fontWeight: 600,
+                    cursor: "pointer", transition: "all 0.2s", fontFamily: "'DM Sans',sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                  }}>💳 Card (F3)</button>
+                <button onClick={() => openModal("cash")}
+                  style={{
+                    flex: 1, padding: "13px 8px", borderRadius: 10,
+                    background: `linear-gradient(135deg,${G.gold},#B8880E)`,
+                    border: "none", color: G.dark, fontSize: 13, fontWeight: 600,
+                    cursor: "pointer", transition: "all 0.2s", fontFamily: "'DM Sans',sans-serif",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+                  }}>💵 Cash (F4)</button>
+              </div>
             </div>
           </div>
-        </div>
         ) : (
           <AdminDashboard
             incomeEntries={incomeEntries}
@@ -607,16 +664,16 @@ export default function HappyHourPOS() {
         )}
 
         {/* MODALS */}
-        <BillModal open={modal==="bill"} onClose={() => setModal(null)}
+        <BillModal open={modal === "bill"} onClose={() => setModal(null)}
           order={order} discount={discount} serviceType={serviceType} note={note} />
         <CardModal
-          open={modal==="card"}
+          open={modal === "card"}
           total={total}
           onStartCheckout={startCardCheckout}
           onClose={handlePayClose}
           isProcessing={cardCheckoutBusy}
         />
-        <CashModal open={modal==="cash"}
+        <CashModal open={modal === "cash"}
           total={total} onSuccess={handleCashPaySuccess}
           onClose={handlePayClose} />
         <OrderTypeModal
