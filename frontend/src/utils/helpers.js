@@ -33,7 +33,7 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
   const disc = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
-  const total = taxable * 1.1;
+  const total = taxable;
   const paperWidthMm = 72.1;
   const noteLines = note ? Math.max(1, Math.ceil(String(note).length / 30)) : 0;
   const pageHeightMm = Math.max(72, Math.ceil(58 + (order.length * 6.5) + (disc > 0 ? 5 : 0) + (noteLines * 4)));
@@ -62,7 +62,6 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
     ${order.map(o=>`<div class="r"><span>${o.name} x${o.qty}</span><span>Rs.${(o.price*o.qty).toLocaleString()}</span></div>`).join("")}
     <hr>
     ${disc>0?`<div class="r"><span>Discount(${disc}%)</span><span>-Rs.${discAmt.toLocaleString("en",{minimumFractionDigits:2})}</span></div>`:``}
-    <div class="r"><span>Tax(10%)</span><span>Rs.${(taxable*0.1).toLocaleString("en",{minimumFractionDigits:2})}</span></div>
     <div class="r total"><span>TOTAL</span><span>Rs.${total.toLocaleString("en",{minimumFractionDigits:2})}</span></div>
     ${note ? `<div class="r"><span>Note</span><span>${note}</span></div>` : ""}
     <div class="r"><span>Order Type</span><span>${serviceType}</span></div>
@@ -111,8 +110,7 @@ export const createSaleSnapshot = ({ order = [], discount = "", serviceType = "D
   const discountPercent = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discountAmount = subtotal * discountPercent / 100;
   const taxable = subtotal - discountAmount;
-  const tax = taxable * 0.1;
-  const total = Number.isFinite(Number(amount)) && Number(amount) > 0 ? Number(amount) : taxable + tax;
+  const total = Number.isFinite(Number(amount)) && Number(amount) > 0 ? Number(amount) : taxable;
   const saleDate = todayKey();
 
   return {
@@ -126,7 +124,6 @@ export const createSaleSnapshot = ({ order = [], discount = "", serviceType = "D
     subtotal,
     discountPercent,
     discountAmount,
-    tax,
     total,
     note: note || "",
     source,

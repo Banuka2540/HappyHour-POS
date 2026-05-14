@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 
 import { MENU, CATEGORIES } from "./data/menu";
 import { G, globalCss, API_BASE_URL, ORDER_API_BASE_URL, ADMIN_PIN, LEDGER_KEYS } from "./utils/constants";
-import { fmt, todayKey, readLedger, writeLedger, createSaleSnapshot, readSaleDraft, writeSaleDraft, clearSaleDraft, printReceipt } from "./utils/helpers";
+import { fmt, todayKey, readLedger, writeLedger, createSaleSnapshot, clearSaleDraft, printReceipt } from "./utils/helpers";
 
 import { Toast } from "./components/Toast";
-import { AdminPinModal, CardModal, CashModal, BillModal, OrderTypeModal } from "./components/Modals";
+import { AdminPinModal, CashModal, BillModal, OrderTypeModal } from "./components/Modals";
 import { AdminDashboard } from "./components/AdminDashboard";
 
 export default function HappyHourPOS() {
@@ -16,14 +16,14 @@ export default function HappyHourPOS() {
   const [serviceType, setServiceType] = useState("Dining");
   const [note, setNote] = useState("");
   const [discount, setDiscount] = useState("");
-  const [modal, setModal] = useState(null); // 'bill' | 'card' | 'cash'
+  const [modal, setModal] = useState(null); // 'bill' | 'cash'
   const [pendingModalType, setPendingModalType] = useState(null);
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
   const [toast, setToast] = useState({ msg: "", warn: false });
   const [clock, setClock] = useState(new Date());
   const [showAdminPin, setShowAdminPin] = useState(false);
   const [adminPinChecking, setAdminPinChecking] = useState(false);
-  const [cardCheckoutBusy, setCardCheckoutBusy] = useState(false);
+  
   const [incomeEntries, setIncomeEntries] = useState(() => readLedger(LEDGER_KEYS.income));
   const [expenseEntries, setExpenseEntries] = useState(() => readLedger(LEDGER_KEYS.expenses));
 
@@ -83,8 +83,7 @@ export default function HappyHourPOS() {
   const disc = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
-  const tax = taxable * 0.1;
-  const total = taxable + tax;
+  const total = taxable;
   const pendingOrderAmount = order.length > 0 && modal === null ? total : 0;
 
   const submitSaleToGoogleSheet = useCallback(async (sale) => {
@@ -151,107 +150,14 @@ export default function HappyHourPOS() {
 
   const handlePayClose = () => { setModal(null); clearOrder(); };
 
-  const startCardCheckout = async (receiptEmail) => {
-    if (total <= 0) {
-      showToast("⚠️ No amount to charge", true);
-      return;
-    }
-
-    try {
-      setCardCheckoutBusy(true);
-      const response = await fetch(`${API_BASE_URL}/api/create-checkout-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amountInCents: Math.round(total * 100),
-          currency: "lkr",
-          receiptEmail: receiptEmail || undefined,
-          table: serviceType,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Unable to create checkout session");
-      }
-
-      const data = await response.json();
-      if (!data?.url) {
-        throw new Error("Checkout URL not received");
-      }
-
-      writeSaleDraft(createSaleSnapshot({
-        order,
-        discount,
-        serviceType,
-        note,
-        amount: total,
-        method: "Card",
-        source: "card",
-        receiptEmail: receiptEmail || "",
-      }));
-
-      window.location.href = data.url;
-    } catch {
-      showToast("❌ Card checkout failed. Check payment server settings.", true);
-      setCardCheckoutBusy(false);
-    }
-  };
+  
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get("payment");
     const sessionId = params.get("session_id");
 
-    if (paymentStatus !== "success" || !sessionId) return;
-
-    const processedKey = `${LEDGER_KEYS.income}-processed-${sessionId}`;
-    if (window.localStorage.getItem(processedKey)) {
-      window.history.replaceState({}, "", window.location.pathname);
-      return;
-    }
-
-    const verifyPayment = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/checkout-session/${sessionId}`);
-        if (!response.ok) {
-          throw new Error("Unable to verify payment");
-        }
-
-        const session = await response.json();
-        if (session.payment_status !== "paid") {
-          throw new Error("Payment not completed");
-        }
-
-        const draft = readSaleDraft();
-        const amount = (session.amount_total || 0) / 100;
-        const saleDetails = draft || createSaleSnapshot({
-          amount,
-          method: "Card",
-          source: "card",
-          serviceType,
-        });
-
-        clearSaleDraft();
-        handlePaySuccess({
-          amount, method: "Card", saleDetails: {
-            ...saleDetails,
-            amount,
-            total: amount,
-            paymentStatus: session.payment_status,
-            stripeSessionId: session.id,
-          }
-        });
-        clearOrder();
-        setModal(null);
-        window.localStorage.setItem(processedKey, "1");
-      } catch {
-        showToast("❌ Could not verify card payment", true);
-      } finally {
-        window.history.replaceState({}, "", window.location.pathname);
-      }
-    };
-
-    verifyPayment();
+    // Card payment flow removed
   }, [clearOrder, handlePaySuccess, serviceType, showToast]);
 
   const handleAddExpense = (entry) => {
@@ -325,14 +231,10 @@ export default function HappyHourPOS() {
 
       if (isEditable && !e.key.startsWith("F")) return;
 
-      if (activeView === "pos") {
+        if (activeView === "pos") {
         if (e.key === "F2") {
           e.preventDefault();
           openModal("bill");
-        }
-        if (e.key === "F3") {
-          e.preventDefault();
-          openModal("card");
         }
         if (e.key === "F4") {
           e.preventDefault();
@@ -589,8 +491,7 @@ export default function HappyHourPOS() {
 
               {/* SUMMARY */}
               <div style={{ padding: "14px 16px", borderTop: `1px solid ${G.border}`, background: G.panel }}>
-                {[["Subtotal", fmt(sub)], ["Tax (10%)", fmt(tax)],
-                ["Discount", `-${fmt(discAmt)}`]].map(([k, v]) => (
+                {[["Subtotal", fmt(sub)], ["Discount", `-${fmt(discAmt)}`]].map(([k, v]) => (
                   <div key={k} style={{
                     display: "flex", justifyContent: "space-between",
                     marginBottom: 6, fontSize: 13, color: G.muted
@@ -634,14 +535,6 @@ export default function HappyHourPOS() {
                     fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center",
                     justifyContent: "center", gap: 6
                   }}>🖨️ Bill (F2)</button>
-                <button onClick={() => openModal("card")}
-                  style={{
-                    flex: 1, padding: "13px 8px", borderRadius: 10,
-                    background: "linear-gradient(135deg,#2060C0,#1840A0)",
-                    border: "none", color: "#fff", fontSize: 13, fontWeight: 600,
-                    cursor: "pointer", transition: "all 0.2s", fontFamily: "'DM Sans',sans-serif",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-                  }}>💳 Card (F3)</button>
                 <button onClick={() => openModal("cash")}
                   style={{
                     flex: 1, padding: "13px 8px", borderRadius: 10,
@@ -666,13 +559,7 @@ export default function HappyHourPOS() {
         {/* MODALS */}
         <BillModal open={modal === "bill"} onClose={() => setModal(null)}
           order={order} discount={discount} serviceType={serviceType} note={note} />
-        <CardModal
-          open={modal === "card"}
-          total={total}
-          onStartCheckout={startCardCheckout}
-          onClose={handlePayClose}
-          isProcessing={cardCheckoutBusy}
-        />
+        
         <CashModal open={modal === "cash"}
           total={total} onSuccess={handleCashPaySuccess}
           onClose={handlePayClose} />

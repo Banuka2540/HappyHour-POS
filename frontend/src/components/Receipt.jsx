@@ -6,8 +6,7 @@ export function Receipt({ order, discount, serviceType, note }) {
   const disc = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
-  const tax = taxable * 0.1;
-  const total = taxable + tax;
+  const total = taxable;
   const orderId = "HH-" + Math.floor(Math.random() * 9000 + 1000);
 
   return (
@@ -46,9 +45,6 @@ export function Receipt({ order, discount, serviceType, note }) {
           <span>Discount ({disc}%)</span><span>-{fmt(discAmt)}</span>
         </div>
       )}
-      <div style={{ display:"flex", justifyContent:"space-between", margin:"3px 0" }}>
-        <span>Tax (10%)</span><span>{fmt(tax)}</span>
-      </div>
       <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
       <div style={{ display:"flex", justifyContent:"space-between", fontWeight:"bold", fontSize:14 }}>
         <span>TOTAL</span><span>{fmt(total)}</span>
