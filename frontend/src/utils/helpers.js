@@ -37,6 +37,7 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
 
   return `<html><head><title>Happy Hour Receipt</title>
     <style>
+      @page{margin:0}
       body{font-family:'Courier New',monospace;font-size:12px;width:72.1mm;margin:0;padding:0}
       .receipt{width:72.1mm;margin:0;padding:0 4px 6px;box-sizing:border-box;font-weight:700;color:#000000}
       h2{color:#000000;font-size:18px;margin:0;padding-top:0}
@@ -44,7 +45,12 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
       hr{border:none;border-top:1px dashed #000000;margin:6px 0}
       .total{font-weight:700;font-size:15px}
       .center{text-align:center;color:#000000}
-      @media print{body{margin:0} .receipt{font-weight:700}}
+      @media print{
+        @page{margin:0}
+        html,body{margin:0;padding:0}
+        body>*:not(.receipt){display:none!important}
+        .receipt{margin:0;padding:0;font-weight:700}
+      }
     </style></head><body>
     <div class="receipt">
       <div class="center"><h2>🍹 Happy Hour</h2>
@@ -61,13 +67,7 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
     ${note ? `<div class="r"><span>Note</span><span>${note}</span></div>` : ""}
     <div class="r"><span>Order Type</span><span>${serviceType}</span></div>
     <hr><div class="center" style="font-size:10px">Thank you! Please come again 🍹</div>
-
-    <!-- QR Code -->
-    <div class="center" style="margin-top:8px">
-      <img src="/1.png" alt="QR" style="width:90px;height:90px;display:block;margin:0 auto" />
-      <div style="margin-top:6px;font-size:11px;font-weight:700;color:#000000">Visit our website</div>
     </div>
-
     </body></html>`;
 };
 
