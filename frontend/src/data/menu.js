@@ -145,13 +145,15 @@ export const MENU = [
   { id: 109, name: "Sprite", cat: "Cold Drinks", price: 200, emoji: "", tag: "" },
   { id: 110, name: "Cream Soda", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
   { id: 111, name: "Ginger Beer", cat: "Cold Drinks", price: 350, emoji: "", tag: "" },
+  { id: 112, name: "Water Bottle Small", cat: "Cold Drinks", price: 70, emoji: "", tag: "" },
+  { id: 113, name: "Water Bottle Large", cat: "Cold Drinks", price: 130, emoji: "", tag: "" },
 
   // Desserts
-  { id: 112, name: "Fruit Salad", cat: "Desserts", price: 450, emoji: "", tag: "" },
-  { id: 113, name: "Fruit Salad with Ice-Cream", cat: "Desserts", price: 550, emoji: "", tag: "" },
-  { id: 114, name: "Ice-Cream (Vanilla / Choc)", cat: "Desserts", price: 350, emoji: "", tag: "" },
-  { id: 115, name: "Yogurt", cat: "Desserts", price: 100, emoji: "", tag: "" },
-  { id: 116, name: "Cake", cat: "Desserts", price: 250, emoji: "", tag: "" },
+  { id: 114, name: "Fruit Salad", cat: "Desserts", price: 450, emoji: "", tag: "" },
+  { id: 115, name: "Fruit Salad with Ice-Cream", cat: "Desserts", price: 550, emoji: "", tag: "" },
+  { id: 116, name: "Ice-Cream (Vanilla / Choc)", cat: "Desserts", price: 350, emoji: "", tag: "" },
+  { id: 117, name: "Yogurt", cat: "Desserts", price: 100, emoji: "", tag: "" },
+  { id: 118, name: "Cake", cat: "Desserts", price: 250, emoji: "", tag: "" },
 ];
 
 export const CATEGORIES = ["All", ...new Set(MENU.map(i => i.cat))];
