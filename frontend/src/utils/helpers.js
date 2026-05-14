@@ -34,17 +34,23 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
   const total = taxable * 1.1;
+  const paperWidthMm = 72.1;
+  const noteLines = note ? Math.max(1, Math.ceil(String(note).length / 30)) : 0;
+  const pageHeightMm = Math.max(72, Math.ceil(58 + (order.length * 6.5) + (disc > 0 ? 5 : 0) + (noteLines * 4)));
 
   return `<html><head><title>Happy Hour Receipt</title>
     <style>
-      body{font-family:'Courier New',monospace;font-size:12px;width:72.1mm;margin:0;padding:0}
-      .receipt{width:72.1mm;margin:0;padding:0 4px 6px;box-sizing:border-box;font-weight:700;color:#000000}
-      h2{color:#000000;font-size:18px;margin:0;padding-top:0}
-      .r{display:flex;justify-content:space-between;margin:3px 0;color:#000000}
-      hr{border:none;border-top:1px dashed #000000;margin:6px 0}
+      @page{size:${paperWidthMm}mm ${pageHeightMm}mm;margin:0}
+      html,body{width:${paperWidthMm}mm;margin:0;padding:0;background:#fff}
+      body{font-family:'Courier New',monospace;font-size:12px;line-height:1.1;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .receipt{width:${paperWidthMm}mm;margin:0;padding:1px 4px 1px;box-sizing:border-box;font-weight:700;color:#000000;break-inside:avoid;page-break-inside:avoid}
+      h2{color:#000000;font-size:18px;margin:0;padding-top:0;line-height:1}
+      .r{display:flex;justify-content:space-between;margin:2px 0;color:#000000}
+      hr{border:none;border-top:1px dashed #000000;margin:3px 0}
       .total{font-weight:700;font-size:15px}
       .center{text-align:center;color:#000000}
-      @media print{body{margin:0} .receipt{font-weight:700}}
+      img{display:block;margin:0 auto;max-width:100%}
+      @media print{html,body{width:${paperWidthMm}mm;margin:0;padding:0} body{margin:0} .receipt{font-weight:700}}
     </style></head><body>
     <div class="receipt">
       <div class="center"><h2>🍹 Happy Hour</h2>
@@ -62,12 +68,6 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
     <div class="r"><span>Order Type</span><span>${serviceType}</span></div>
     <hr><div class="center" style="font-size:10px">Thank you! Please come again 🍹</div>
 
-    <!-- QR Code -->
-    <div class="center" style="margin-top:8px">
-      <img src="/1.png" alt="QR" style="width:90px;height:90px;display:block;margin:0 auto" />
-      <div style="margin-top:6px;font-size:11px;font-weight:700;color:#000000">Visit our website</div>
-    </div>
-
     </body></html>`;
 };
 
@@ -77,10 +77,32 @@ export const printReceipt = (receiptData) => {
   w.document.write(buildReceiptHtml(receiptData));
   w.document.close();
   w.focus();
-  setTimeout(() => {
-    w.print();
-    w.close();
-  }, 300);
+
+  const waitForAssets = async () => {
+    const images = Array.from(w.document.images || []);
+    const imagePromises = images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once: true });
+        img.addEventListener("error", resolve, { once: true });
+      });
+    });
+
+    const fontPromise = w.document.fonts?.ready ?? Promise.resolve();
+    await Promise.all([fontPromise, ...imagePromises]);
+  };
+
+  void waitForAssets().then(() => {
+    setTimeout(() => {
+      w.print();
+      w.close();
+    }, 75);
+  }).catch(() => {
+    setTimeout(() => {
+      w.print();
+      w.close();
+    }, 75);
+  });
   return true;
 };
 

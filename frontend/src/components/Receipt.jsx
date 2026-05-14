@@ -57,18 +57,6 @@ export function Receipt({ order, discount, serviceType, note }) {
       <div style={{ textAlign:"center", marginTop:10, fontSize:10, color:"#000000" }}>
         Thank you for dining with us!<br/>Please visit again 🍹<br/>*All prices inclusive of service charge*
       </div>
-      
-      {/* Website QR Code Section */}
-      <div style={{ textAlign: "center", marginTop: 15, marginBottom: 5 }}>
-        <img 
-          src="/1.png" 
-          alt="Website QR Code" 
-          style={{ width: "90px", height: "90px", display: "block", margin: "0 auto" }} 
-        />
-        <div style={{ marginTop: 6, fontSize: 11, color: "#000000", fontWeight: "bold" }}>
-          Visit our website
-        </div>
-      </div>
     </div>
   );
 }
