@@ -1,3 +1,6 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Receipt } from "../components/Receipt";
 import { SALE_DRAFT_KEY } from "./constants";
 
 export const fmt = (n) => `Rs. ${Number(n).toLocaleString("en", { minimumFractionDigits: 2 })}`;
@@ -28,46 +31,18 @@ export const writeLedger = (key, value) => {
   }
 };
 
-export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
-  const sub = order.reduce((s, o) => s + o.price * o.qty, 0);
-  const disc = Math.min(100, Math.max(0, parseFloat(discount) || 0));
-  const discAmt = sub * disc / 100;
-  const taxable = sub - discAmt;
-  const total = taxable;
-  const receiptWidthMm = 72.1;
-  const pageWidthMm = receiptWidthMm + 8;
-  const noteLines = note ? Math.max(1, Math.ceil(String(note).length / 30)) : 0;
-  const pageHeightMm = Math.max(48, Math.ceil(58 + (order.length * 6.5) + (disc > 0 ? 5 : 0) + (noteLines * 4)));
+const buildReceiptHtml = (receiptData) => {
+  const receiptMarkup = renderToStaticMarkup(createElement(Receipt, receiptData));
 
   return `<html><head><title>Happy Hour Receipt</title>
     <style>
-      @page{size:${pageWidthMm}mm ${pageHeightMm}mm;margin:0 4mm}
-      html,body{width:${receiptWidthMm}mm;margin:0;padding:0;background:#fff}
-      body{font-family:'Courier New',monospace;font-size:12px;line-height:1.1;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      .receipt{width:${receiptWidthMm}mm;margin:0;padding:0;box-sizing:border-box;font-weight:700;color:#000000;break-inside:avoid;page-break-inside:avoid}
-      h2{color:#000000;font-size:18px;margin:0;padding-top:0;line-height:1}
-      .r{display:flex;justify-content:space-between;margin:2px 0;color:#000000}
-      hr{border:none;border-top:1px dashed #000000;margin:2px 0}
-      .total{font-weight:700;font-size:15px}
-      .center{text-align:center;color:#000000}
-      img{display:block;margin:0 auto;max-width:100%}
-      @media print{html,body{width:${receiptWidthMm}mm;margin:0;padding:0} body{margin:0} .receipt{font-weight:700}}
+      @page{margin:0 4mm}
+      html,body{margin:0;padding:0;background:#fff}
+      body{font-family:'Courier New',monospace;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .print-shell{width:72.1mm;margin:0;padding:0;box-sizing:border-box}
+      @media print{html,body{margin:0;padding:0} body{margin:0}}
     </style></head><body>
-    <div class="receipt">
-      <div class="center"><h2>🍹 Happy Hour</h2>
-        <div>Restaurant &amp; Cafe</div>
-        <div>417, Peradeniya Road, Kandy</div>
-        <div>0774451516</div>
-      </div>
-      <hr>
-    ${order.map(o=>`<div class="r"><span>${o.name} x${o.qty}</span><span>Rs.${(o.price*o.qty).toLocaleString()}</span></div>`).join("")}
-    <hr>
-    ${disc>0?`<div class="r"><span>Discount(${disc}%)</span><span>-Rs.${discAmt.toLocaleString("en",{minimumFractionDigits:2})}</span></div>`:``}
-    <div class="r total"><span>TOTAL</span><span>Rs.${total.toLocaleString("en",{minimumFractionDigits:2})}</span></div>
-    ${note ? `<div class="r"><span>Note</span><span>${note}</span></div>` : ""}
-    <div class="r"><span>Order Type</span><span>${serviceType}</span></div>
-    <hr><div class="center" style="font-size:10px">Thank you! Please come again 🍹</div>
-
+    <div class="print-shell">${receiptMarkup}</div>
     </body></html>`;
 };
 
