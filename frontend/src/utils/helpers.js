@@ -34,23 +34,24 @@ export const buildReceiptHtml = ({ order, discount, serviceType, note }) => {
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
   const total = taxable;
-  const paperWidthMm = 72.1;
+  const receiptWidthMm = 72.1;
+  const pageWidthMm = receiptWidthMm + 8;
   const noteLines = note ? Math.max(1, Math.ceil(String(note).length / 30)) : 0;
-  const pageHeightMm = Math.max(120, Math.ceil(58 + (order.length * 6.5) + (disc > 0 ? 5 : 0) + (noteLines * 4)));
+  const pageHeightMm = Math.max(48, Math.ceil(58 + (order.length * 6.5) + (disc > 0 ? 5 : 0) + (noteLines * 4)));
 
   return `<html><head><title>Happy Hour Receipt</title>
     <style>
-      @page{size:${paperWidthMm}mm ${pageHeightMm}mm;margin:0mm}
-      html,body{width:${paperWidthMm}mm;margin:0;padding:0;background:#fff}
+      @page{size:${pageWidthMm}mm ${pageHeightMm}mm;margin:0 4mm}
+      html,body{width:${receiptWidthMm}mm;margin:0;padding:0;background:#fff}
       body{font-family:'Courier New',monospace;font-size:12px;line-height:1.1;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      .receipt{width:${paperWidthMm}mm;margin:0;padding:1px 4px 1px;box-sizing:border-box;font-weight:700;color:#000000;break-inside:avoid;page-break-inside:avoid}
+      .receipt{width:${receiptWidthMm}mm;margin:0;padding:0;box-sizing:border-box;font-weight:700;color:#000000;break-inside:avoid;page-break-inside:avoid}
       h2{color:#000000;font-size:18px;margin:0;padding-top:0;line-height:1}
       .r{display:flex;justify-content:space-between;margin:2px 0;color:#000000}
-      hr{border:none;border-top:1px dashed #000000;margin:3px 0}
+      hr{border:none;border-top:1px dashed #000000;margin:2px 0}
       .total{font-weight:700;font-size:15px}
       .center{text-align:center;color:#000000}
       img{display:block;margin:0 auto;max-width:100%}
-      @media print{html,body{width:${paperWidthMm}mm;margin:0;padding:0} body{margin:0} .receipt{font-weight:700}}
+      @media print{html,body{width:${receiptWidthMm}mm;margin:0;padding:0} body{margin:0} .receipt{font-weight:700}}
     </style></head><body>
     <div class="receipt">
       <div class="center"><h2>🍹 Happy Hour</h2>
