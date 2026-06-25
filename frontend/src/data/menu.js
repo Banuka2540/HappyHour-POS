@@ -154,6 +154,11 @@ export const MENU = [
   { id: 116, name: "Ice-Cream (Vanilla / Choc)", cat: "Desserts", price: 350, emoji: "", tag: "" },
   { id: 117, name: "Yogurt", cat: "Desserts", price: 100, emoji: "", tag: "" },
   { id: 118, name: "Cake", cat: "Desserts", price: 250, emoji: "", tag: "" },
+
+  { id: 119, name: "Egg Bun", cat: "Buns", price: 150, emoji: "", tag: "" },
+  { id: 120, name: "Sandwhich - Salmon", cat: "Sandwhich", price: 150, emoji: "", tag: "" },
+  { id: 121, name: "Fried Rice Chicken", cat: "Fried Rice", price: 600, emoji: "", tag: "" },
+
 ];
 
 export const CATEGORIES = ["All", ...new Set(MENU.map(i => i.cat))];
