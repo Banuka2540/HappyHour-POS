@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { G, API_BASE_URL } from "../utils/constants";
+import { G, ORDER_API_BASE_URL } from "../utils/constants";
 
 const KOS_ALARM_KEY = "happy-hour-kos-alarm-enabled";
 
 const getApiBase = () => {
   if (typeof window === "undefined") {
-    return API_BASE_URL;
+    return ORDER_API_BASE_URL;
   }
 
-  const configured = (API_BASE_URL || "").trim();
+  const configured = (ORDER_API_BASE_URL || "").trim();
   const host = window.location.hostname;
 
   if (configured && !/^http:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/i.test(configured)) {
@@ -16,10 +16,10 @@ const getApiBase = () => {
   }
 
   if (host && !/^(localhost|127\.0\.0\.1)$/i.test(host)) {
-    return `${window.location.protocol}//${host}:4242`;
+    return window.location.origin;
   }
 
-  return "http://localhost:4242";
+  return configured || "http://localhost:4242";
 };
 
 const formatPrice = (value) => `Rs. ${Number(value || 0).toLocaleString("en", { minimumFractionDigits: 2 })}`;
@@ -52,7 +52,8 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
   const [connectionState, setConnectionState] = useState("Connecting");
   const [alarmEnabled, setAlarmEnabled] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem(KOS_ALARM_KEY) === "true";
+    const stored = window.localStorage.getItem(KOS_ALARM_KEY);
+    return stored === null ? true : stored === "true";
   });
   const [flashTicketId, setFlashTicketId] = useState("");
   const [finishingTicketId, setFinishingTicketId] = useState("");
@@ -100,6 +101,9 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
 
       if (alarmEnabledRef.current) {
         playAlarmTone(audioContextRef);
+        if (navigator.vibrate) {
+          navigator.vibrate([160, 80, 160]);
+        }
         if (window.Notification && window.Notification.permission === "granted") {
           new Notification("New kitchen order received", { body: `Order ${ticket.orderNumber} is ready for prep.` });
         }
@@ -119,6 +123,7 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
 
     source.onerror = () => {
       setConnectionState("Reconnecting");
+      setNotice("Connection lost. Retrying live feed...");
     };
 
     return () => {
@@ -156,6 +161,21 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
       await window.Notification.requestPermission();
     }
   };
+
+  useEffect(() => {
+    const unlockAlarm = () => {
+      alarmEnabledRef.current = true;
+      void prepareAlarmContext();
+    };
+
+    window.addEventListener("pointerdown", unlockAlarm, { once: true });
+    window.addEventListener("touchstart", unlockAlarm, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", unlockAlarm);
+      window.removeEventListener("touchstart", unlockAlarm);
+    };
+  }, []);
 
   const finishTicket = async (ticketId) => {
     if (!ticketId || finishingTicketId === ticketId) return;
