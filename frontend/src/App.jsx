@@ -7,11 +7,15 @@ import { fmt, todayKey, readLedger, writeLedger, createSaleSnapshot, clearSaleDr
 import { Toast } from "./components/Toast";
 import { AdminPinModal, CashModal, BillModal, OrderTypeModal } from "./components/Modals";
 import { AdminDashboard } from "./components/AdminDashboard";
+import { KOSDashboard } from "./components/KOSDashboard";
 
 export default function HappyHourPOS() {
   const [order, setOrder] = useState([]);
   const [activeCat, setActiveCat] = useState("All");
-  const [activeView, setActiveView] = useState("pos");
+  const [activeView, setActiveView] = useState(() => {
+    if (typeof window === "undefined") return "pos";
+    return new URLSearchParams(window.location.search).get("view") === "kos" ? "kos" : "pos";
+  });
   const [search, setSearch] = useState("");
   const [serviceType, setServiceType] = useState("Dining");
   const [note, setNote] = useState("");
@@ -53,6 +57,19 @@ export default function HappyHourPOS() {
   useEffect(() => {
     writeLedger(CUSTOM_MENU_KEY, customProducts);
   }, [customProducts]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const nextUrl = new URL(window.location.href);
+    if (activeView === "kos") {
+      nextUrl.searchParams.set("view", "kos");
+    } else {
+      nextUrl.searchParams.delete("view");
+    }
+
+    window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+  }, [activeView]);
 
   const showToast = useCallback((msg, warn = false) => {
     setToast({ msg, warn });
@@ -187,6 +204,10 @@ export default function HappyHourPOS() {
   const handleAddProduct = (entry) => {
     setCustomProducts(prev => [entry, ...prev]);
     showToast(`➕ Product added: ${entry.name}`);
+  };
+
+  const openView = (view) => {
+    setActiveView(view);
   };
 
   const openModal = (type) => {
@@ -326,8 +347,9 @@ export default function HappyHourPOS() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ display: "flex", background: G.dark3, border: `1px solid ${G.border}`, borderRadius: 12, padding: 4 }}>
-              {[
+                {[
                 { id: "pos", label: "POS" },
+                { id: "kos", label: "KOS" },
                 { id: "admin", label: "Admin" },
               ].map(view => (
                 <button key={view.id} onClick={() => requestAdminAccess(view.id)} style={{
@@ -361,7 +383,12 @@ export default function HappyHourPOS() {
         </header>
 
         {/* LAYOUT */}
-        {activeView === "pos" ? (
+        {activeView === "kos" ? (
+          <KOSDashboard
+            onBackToPos={() => openView("pos")}
+            onOpenAdmin={() => requestAdminAccess("admin")}
+          />
+        ) : activeView === "pos" ? (
           <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 360px", height: "calc(100vh - 58px)" }}>
 
             {/* SECTIONS / LEFT COLUMN */}

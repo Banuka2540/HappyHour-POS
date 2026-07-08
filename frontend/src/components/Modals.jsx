@@ -197,7 +197,7 @@ export function BillModal({ open, onClose, order, discount, serviceType, note, r
 
   return (
     <Modal open={open} onClose={onClose} title="Print Bill">
-      <Receipt order={order} discount={discount} serviceType={serviceType} note={note} />
+      <Receipt order={order} discount={discount} serviceType={serviceType} note={note} receiptTimestamp={receiptTimestamp} />
       <div style={{ display:"flex", gap:10, marginTop:16 }}>
         <button onClick={printBill} style={{
           flex:1, padding:12, background:`linear-gradient(135deg,${G.gold},#B8880E)`,

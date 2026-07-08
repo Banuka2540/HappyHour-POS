@@ -22,6 +22,9 @@ const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const salesWorkbookPath = process.env.SALES_WORKBOOK_PATH || path.join(__dirname, "data", "sales-ledger.xlsx");
+const kosOrdersPath = process.env.KOS_ORDERS_PATH || path.join(__dirname, "data", "kos-orders.json");
+const kosClients = new Set();
+let kosOrders = [];
 
 if (!stripeSecretKey) {
   console.warn("STRIPE_SECRET_KEY is not set. Card payment endpoints are disabled.");
@@ -109,6 +112,69 @@ const appendSaleToWorkbook = async (sale) => {
   xlsx.writeFile(workbook, salesWorkbookPath);
 };
 
+const ensureKosOrdersFile = async () => {
+  const kosDir = path.dirname(kosOrdersPath);
+  await fs.mkdir(kosDir, { recursive: true });
+
+  try {
+    await fs.access(kosOrdersPath);
+  } catch {
+    await fs.writeFile(kosOrdersPath, JSON.stringify([], null, 2), "utf8");
+  }
+};
+
+const loadKosOrders = async () => {
+  await ensureKosOrdersFile();
+
+  try {
+    const raw = await fs.readFile(kosOrdersPath, "utf8");
+    const parsed = JSON.parse(raw);
+    kosOrders = Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn("Unable to load KOS orders feed", error);
+    kosOrders = [];
+  }
+};
+
+const persistKosOrders = async () => {
+  await ensureKosOrdersFile();
+  await fs.writeFile(kosOrdersPath, JSON.stringify(kosOrders, null, 2), "utf8");
+};
+
+const normalizeKosItems = (order = {}) => {
+  const items = Array.isArray(order.itemsJson)
+    ? order.itemsJson
+    : Array.isArray(order.items)
+      ? order.items
+      : [];
+
+  return items.map((item) => {
+    const quantity = Number(item?.qty ?? item?.quantity ?? 1) || 1;
+    const itemPrice = Number(item?.price ?? item?.itemPrice ?? 0) || 0;
+
+    return {
+      productName: item?.name || item?.productName || "Item",
+      quantity,
+      itemPrice,
+    };
+  });
+};
+
+const buildKosTicket = (order, orderNumber) => ({
+  ticketId: orderNumber,
+  orderNumber,
+  items: normalizeKosItems(order),
+  receivedAt: order.timestamp || order.createdAt || new Date().toISOString(),
+});
+
+const broadcastKosTicket = (ticket) => {
+  const payload = `event: order\ndata: ${JSON.stringify(ticket)}\n\n`;
+
+  for (const client of kosClients) {
+    client.write(payload);
+  }
+};
+
 const allowedOrigins = new Set([clientUrl, ...clientUrls]);
 const isVercelPreviewOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
@@ -124,8 +190,34 @@ app.use(cors({
 }));
 app.use(express.json());
 
+void loadKosOrders();
+
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, stripeEnabled: Boolean(stripe) });
+});
+
+app.get("/api/kos/orders", (_req, res) => {
+  res.json({ ok: true, orders: kosOrders });
+});
+
+app.get("/api/kos/stream", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  const heartbeat = setInterval(() => {
+    res.write(`event: ping\ndata: ${Date.now()}\n\n`);
+  }, 25000);
+
+  kosClients.add(res);
+  res.write(`event: ready\ndata: ${JSON.stringify({ ok: true, orders: kosOrders.length })}\n\n`);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    kosClients.delete(res);
+  });
 });
 
 app.post("/api/create-checkout-session", async (req, res) => {
@@ -219,11 +311,19 @@ app.post("/api/orders", async (req, res) => {
       return res.status(400).json({ error: "Missing order total" });
     }
 
+    const orderNumber = order.saleId || order.orderId || order.id || `order-${Date.now()}`;
+    const kosTicket = buildKosTicket(order, orderNumber);
+
+    kosOrders = [kosTicket, ...kosOrders.filter((ticket) => ticket.ticketId !== kosTicket.ticketId)].slice(0, 100);
+    await persistKosOrders();
+    broadcastKosTicket(kosTicket);
+
     const result = await appendOrderToGoogleSheet(order);
+
     return res.status(201).json({
       ok: true,
       rowNumber: result.row.rowNumber,
-      orderId: result.rowData.orderId,
+      orderId: result.rowData.orderId || orderNumber,
     });
   } catch (error) {
     console.error("orders append failed", error);
