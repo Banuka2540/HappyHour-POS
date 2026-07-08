@@ -155,9 +155,13 @@ export const MENU = [
   { id: 117, name: "Yogurt", cat: "Desserts", price: 100, emoji: "", tag: "" },
   { id: 118, name: "Cake", cat: "Desserts", price: 250, emoji: "", tag: "" },
 
-  { id: 119, name: "Egg Bun", cat: "Buns", price: 150, emoji: "", tag: "" },
-  { id: 120, name: "Sandwhich - Salmon", cat: "Sandwhich", price: 150, emoji: "", tag: "" },
-  { id: 121, name: "Fried Rice Chicken", cat: "Fried Rice", price: 600, emoji: "", tag: "" },
+  { id: 119, name: "Egg Bun", cat: "Buns", price: 130, emoji: "", tag: "" },
+  { id: 120, name: "Sandwhich - Salmon", cat: "Sandwhich", price: 130, emoji: "", tag: "" },
+  { id: 121, name: "Fried Rice Chicken", cat: "Fried Rice", price: 700, emoji: "", tag: "" },
+  { id: 122, name: "Fried Rice Veg", cat: "Fried Rice", price: 500, emoji: "", tag: "" },
+  { id: 123, name: "Pastry", cat: "Pastry", price: 130, emoji: "", tag: "" },
+  { id: 124, name: "Fish Roll", cat: "Fish Bun", price: 150, emoji: "", tag: "" },
+
 
 ];
 

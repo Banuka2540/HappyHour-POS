@@ -81,7 +81,7 @@ export const printReceipt = (receiptData) => {
   return true;
 };
 
-export const createSaleSnapshot = ({ order = [], discount = "", serviceType = "Dining", note = "", amount = 0, method = "Payment", source = "pos", receiptEmail = "", stripeSessionId = "", paymentStatus = "paid" }) => {
+export const createSaleSnapshot = ({ order = [], discount = "", serviceType = "Dining", note = "", amount = 0, method = "Payment", source = "pos", receiptEmail = "", stripeSessionId = "", paymentStatus = "paid", receiptTimestamp }) => {
   const subtotal = order.reduce((sum, item) => sum + item.price * item.qty, 0);
   const discountPercent = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discountAmount = subtotal * discountPercent / 100;
@@ -92,7 +92,7 @@ export const createSaleSnapshot = ({ order = [], discount = "", serviceType = "D
   return {
     saleId: `sale-${Date.now()}-${Math.random().toString(16).slice(2)}`,
     saleDate,
-    timestamp: new Date().toISOString(),
+    timestamp: receiptTimestamp || new Date().toISOString(),
     paymentMethod: method || "Payment",
     orderType: serviceType || "Dining",
     items: order.map(item => `${item.name} x${item.qty}`).join(" | "),

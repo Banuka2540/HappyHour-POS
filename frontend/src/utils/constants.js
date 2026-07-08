@@ -46,6 +46,7 @@ const resolveOrderApiBaseUrl = () => {
 export const ORDER_API_BASE_URL = resolveOrderApiBaseUrl();
 export const ADMIN_PIN = "254010@";
 export const SALE_DRAFT_KEY = "happy-hour-pending-card-sale";
+export const CUSTOM_MENU_KEY = "happy-hour-custom-menu-items";
 export const LEDGER_KEYS = {
   income: "happy-hour-income-ledger",
   expenses: "happy-hour-expense-ledger",

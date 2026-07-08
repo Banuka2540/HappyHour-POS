@@ -190,9 +190,9 @@ export function CashModal({ open, onClose, total, onSuccess }) {
   );
 }
 
-export function BillModal({ open, onClose, order, discount, serviceType, note }) {
+export function BillModal({ open, onClose, order, discount, serviceType, note, receiptTimestamp }) {
   const printBill = () => {
-    printReceipt({ order, discount, serviceType, note });
+    printReceipt({ order, discount, serviceType, note, receiptTimestamp });
   };
 
   return (

@@ -1,13 +1,15 @@
 import { fmt } from "../utils/helpers";
 
-export function Receipt({ order, discount, serviceType, note }) {
-  const now = new Date();
-  const sub = order.reduce((s,o) => s + o.price * o.qty, 0);
+export function Receipt({ order, discount, serviceType, note, receiptTimestamp }) {
+  const printedAt = receiptTimestamp ? new Date(receiptTimestamp) : new Date();
+  const sub = order.reduce((s, o) => s + o.price * o.qty, 0);
   const disc = Math.min(100, Math.max(0, parseFloat(discount) || 0));
   const discAmt = sub * disc / 100;
   const taxable = sub - discAmt;
   const total = taxable;
   const orderId = "HH-" + Math.floor(Math.random() * 9000 + 1000);
+  const dateText = printedAt.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" });
+  const timeText = printedAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div style={{ background:"#fff", color:"#000000", borderRadius:8, padding:"6px 12px",
@@ -20,10 +22,10 @@ export function Receipt({ order, discount, serviceType, note }) {
       </div>
       <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />
       {[["Order #", orderId], ["Order Type", serviceType],
-        ["Date", now.toLocaleDateString("en-GB")],
-        ["Time", now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})],
+        ["Date", dateText],
+        ["Time", timeText],
         ...(note ? [["Note", note]] : [])
-      ].map(([k,v]) => (
+      ].map(([k, v]) => (
         <div key={k} style={{ display:"flex", justifyContent:"space-between", margin:"3px 0" }}>
           <span>{k}</span><span>{v}</span>
         </div>
@@ -33,7 +35,7 @@ export function Receipt({ order, discount, serviceType, note }) {
       {order.map(o => (
         <div key={o.id} style={{ display:"flex", justifyContent:"space-between", margin:"3px 0" }}>
           <span>{o.name} x{o.qty}</span>
-          <span>Rs. {(o.price*o.qty).toLocaleString()}</span>
+          <span>Rs. {(o.price * o.qty).toLocaleString()}</span>
         </div>
       ))}
       <hr style={{ border:"none", borderTop:"1px dashed #000000", margin:"8px 0" }} />

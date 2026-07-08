@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
-import { MENU, CATEGORIES } from "./data/menu";
-import { G, globalCss, API_BASE_URL, ORDER_API_BASE_URL, ADMIN_PIN, LEDGER_KEYS } from "./utils/constants";
+import { MENU } from "./data/menu";
+import { G, globalCss, API_BASE_URL, ORDER_API_BASE_URL, ADMIN_PIN, LEDGER_KEYS, CUSTOM_MENU_KEY } from "./utils/constants";
 import { fmt, todayKey, readLedger, writeLedger, createSaleSnapshot, clearSaleDraft, printReceipt } from "./utils/helpers";
 
 import { Toast } from "./components/Toast";
@@ -16,6 +16,9 @@ export default function HappyHourPOS() {
   const [serviceType, setServiceType] = useState("Dining");
   const [note, setNote] = useState("");
   const [discount, setDiscount] = useState("");
+  const [useCustomReceiptTimestamp, setUseCustomReceiptTimestamp] = useState(false);
+  const [receiptDate, setReceiptDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [receiptTime, setReceiptTime] = useState(() => new Date().toTimeString().slice(0, 5));
   const [modal, setModal] = useState(null); // 'bill' | 'cash'
   const [pendingModalType, setPendingModalType] = useState(null);
   const [showOrderTypeModal, setShowOrderTypeModal] = useState(false);
@@ -26,6 +29,7 @@ export default function HappyHourPOS() {
   
   const [incomeEntries, setIncomeEntries] = useState(() => readLedger(LEDGER_KEYS.income));
   const [expenseEntries, setExpenseEntries] = useState(() => readLedger(LEDGER_KEYS.expenses));
+  const [customProducts, setCustomProducts] = useState(() => readLedger(CUSTOM_MENU_KEY));
 
   // UI sizing: make menu items larger when viewing the full "All" section
   const itemMin = activeCat === "All" ? 220 : 140;
@@ -45,6 +49,10 @@ export default function HappyHourPOS() {
   useEffect(() => {
     writeLedger(LEDGER_KEYS.expenses, expenseEntries);
   }, [expenseEntries]);
+
+  useEffect(() => {
+    writeLedger(CUSTOM_MENU_KEY, customProducts);
+  }, [customProducts]);
 
   const showToast = useCallback((msg, warn = false) => {
     setToast({ msg, warn });
@@ -71,9 +79,19 @@ export default function HappyHourPOS() {
     setOrder([]);
     setNote("");
     setDiscount("");
+    setUseCustomReceiptTimestamp(false);
+    setReceiptDate(new Date().toISOString().slice(0, 10));
+    setReceiptTime(new Date().toTimeString().slice(0, 5));
   }, []);
 
-  const filtered = MENU.filter(i => {
+  const receiptTimestamp = useCustomReceiptTimestamp
+    ? new Date(`${receiptDate}T${receiptTime}`).toISOString()
+    : undefined;
+
+  const menuCatalog = [...MENU, ...customProducts];
+  const menuCategories = ["All", ...new Set(menuCatalog.map(i => i.cat))];
+
+  const filtered = menuCatalog.filter(i => {
     const catOk = activeCat === "All" || i.cat === activeCat;
     const searchOk = !search || i.name.toLowerCase().includes(search.toLowerCase());
     return catOk && searchOk;
@@ -140,9 +158,10 @@ export default function HappyHourPOS() {
       amount,
       method,
       source: "cash",
+      receiptTimestamp,
     });
     handlePaySuccess({ amount, method, saleDetails });
-    const didOpen = printReceipt({ order, discount, serviceType, note });
+    const didOpen = printReceipt({ order, discount, serviceType, note, receiptTimestamp });
     if (!didOpen) {
       showToast("⚠️ Auto print blocked. Please allow popups.", true);
     }
@@ -163,6 +182,11 @@ export default function HappyHourPOS() {
   const handleAddExpense = (entry) => {
     setExpenseEntries(prev => [entry, ...prev]);
     showToast(`🧾 Expense recorded: ${entry.label}`);
+  };
+
+  const handleAddProduct = (entry) => {
+    setCustomProducts(prev => [entry, ...prev]);
+    showToast(`➕ Product added: ${entry.name}`);
   };
 
   const openModal = (type) => {
@@ -344,7 +368,7 @@ export default function HappyHourPOS() {
             <div style={{ display: "flex", flexDirection: "column", overflowY: "auto", background: G.panel, borderRight: `1px solid ${G.border}`, padding: "12px" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: G.muted, marginBottom: 8 }}>Sections</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {CATEGORIES.map(c => (
+                {menuCategories.map(c => (
                   <button key={c} className="cat-btn" onClick={() => setActiveCat(c)}
                     style={{
                       textAlign: "left", padding: "10px 12px", borderRadius: 8,
@@ -525,6 +549,51 @@ export default function HappyHourPOS() {
                   }} />
               </div>
 
+              <div style={{ padding: "0 16px 12px" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  background: G.card, border: `1px solid ${G.border}`, borderRadius: 10,
+                  padding: "10px 12px", marginBottom: useCustomReceiptTimestamp ? 10 : 0
+                }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: G.text, fontSize: 12 }}>
+                    <input
+                      type="checkbox"
+                      checked={useCustomReceiptTimestamp}
+                      onChange={e => setUseCustomReceiptTimestamp(e.target.checked)}
+                    />
+                    Custom receipt date/time
+                  </label>
+                  <span style={{ color: G.muted, fontSize: 11 }}>Optional</span>
+                </div>
+                {useCustomReceiptTimestamp && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <input
+                      type="date"
+                      value={receiptDate}
+                      onChange={e => setReceiptDate(e.target.value)}
+                      style={{
+                        width: "100%", background: G.card, border: `1px solid ${G.border}`,
+                        color: G.text, fontSize: 12, padding: "7px 10px", borderRadius: 8,
+                        outline: "none", fontFamily: "'DM Sans',sans-serif"
+                      }}
+                    />
+                    <input
+                      type="time"
+                      value={receiptTime}
+                      onChange={e => setReceiptTime(e.target.value)}
+                      style={{
+                        width: "100%", background: G.card, border: `1px solid ${G.border}`,
+                        color: G.text, fontSize: 12, padding: "7px 10px", borderRadius: 8,
+                        outline: "none", fontFamily: "'DM Sans',sans-serif"
+                      }}
+                    />
+                  </div>
+                )}
+                <div style={{ color: G.muted, fontSize: 11, marginTop: 8 }}>
+                  Leave it off to use the current system date and time.
+                </div>
+              </div>
+
               {/* ACTION BUTTONS */}
               <div style={{ display: "flex", gap: 10, padding: "0 16px 16px" }}>
                 <button onClick={() => openModal("bill")}
@@ -552,13 +621,14 @@ export default function HappyHourPOS() {
             expenseEntries={expenseEntries}
             pendingOrderAmount={pendingOrderAmount}
             onAddExpense={handleAddExpense}
+            onAddProduct={handleAddProduct}
             onBack={() => setActiveView("pos")}
           />
         )}
 
         {/* MODALS */}
         <BillModal open={modal === "bill"} onClose={() => setModal(null)}
-          order={order} discount={discount} serviceType={serviceType} note={note} />
+          order={order} discount={discount} serviceType={serviceType} note={note} receiptTimestamp={receiptTimestamp} />
         
         <CashModal open={modal === "cash"}
           total={total} onSuccess={handleCashPaySuccess}

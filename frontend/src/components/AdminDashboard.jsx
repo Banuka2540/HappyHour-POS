@@ -2,9 +2,14 @@ import { useState } from "react";
 import { G } from "../utils/constants";
 import { fmt, todayKey } from "../utils/helpers";
 
-export function AdminDashboard({ incomeEntries, expenseEntries, pendingOrderAmount, onAddExpense, onBack }) {
+export function AdminDashboard({ incomeEntries, expenseEntries, pendingOrderAmount, onAddExpense, onAddProduct, onBack }) {
   const [expenseLabel, setExpenseLabel] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
+  const [productName, setProductName] = useState("");
+  const [productCategory, setProductCategory] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productEmoji, setProductEmoji] = useState("🍽️");
+  const [productTag, setProductTag] = useState("");
 
   const today = todayKey();
   const todaysIncome = incomeEntries.filter(entry => entry.date === today);
@@ -27,6 +32,27 @@ export function AdminDashboard({ incomeEntries, expenseEntries, pendingOrderAmou
     });
     setExpenseLabel("");
     setExpenseAmount("");
+  };
+
+  const submitProduct = () => {
+    const price = parseFloat(productPrice);
+    if (!productName.trim() || !productCategory.trim() || !Number.isFinite(price) || price <= 0) return;
+
+    onAddProduct({
+      id: `custom-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name: productName.trim(),
+      cat: productCategory.trim(),
+      price,
+      emoji: productEmoji.trim() || "🍽️",
+      tag: productTag.trim(),
+      createdAt: new Date().toISOString(),
+    });
+
+    setProductName("");
+    setProductCategory("");
+    setProductPrice("");
+    setProductEmoji("🍽️");
+    setProductTag("");
   };
 
   return (
@@ -98,6 +124,32 @@ export function AdminDashboard({ incomeEntries, expenseEntries, pendingOrderAmou
                 fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif"
               }}>
                 Record expense
+              </button>
+            </div>
+          </div>
+
+          <div style={{ background:G.dark2, border:`1px solid ${G.border}`, borderRadius:16, padding:18 }}>
+            <div style={{ fontSize:18, fontWeight:700, marginBottom:10 }}>Add product</div>
+            <div style={{ color:G.muted, fontSize:12, marginBottom:10 }}>Create a new menu item and it will appear in the POS immediately.</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              <input value={productName} onChange={e => setProductName(e.target.value)} placeholder="Product name"
+                style={{ width:"100%", padding:"11px 12px", background:G.card, border:`1px solid ${G.border}`, color:G.text, borderRadius:10, outline:"none", fontFamily:"'DM Sans',sans-serif" }} />
+              <input value={productCategory} onChange={e => setProductCategory(e.target.value)} placeholder="Category"
+                style={{ width:"100%", padding:"11px 12px", background:G.card, border:`1px solid ${G.border}`, color:G.text, borderRadius:10, outline:"none", fontFamily:"'DM Sans',sans-serif" }} />
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                <input value={productPrice} onChange={e => setProductPrice(e.target.value)} type="number" min="0" step="0.01" placeholder="Price"
+                  style={{ width:"100%", padding:"11px 12px", background:G.card, border:`1px solid ${G.border}`, color:G.text, borderRadius:10, outline:"none", fontFamily:"'DM Sans',sans-serif" }} />
+                <input value={productEmoji} onChange={e => setProductEmoji(e.target.value)} placeholder="Emoji"
+                  style={{ width:"100%", padding:"11px 12px", background:G.card, border:`1px solid ${G.border}`, color:G.text, borderRadius:10, outline:"none", fontFamily:"'DM Sans',sans-serif" }} />
+              </div>
+              <input value={productTag} onChange={e => setProductTag(e.target.value)} placeholder="Tag (optional)"
+                style={{ width:"100%", padding:"11px 12px", background:G.card, border:`1px solid ${G.border}`, color:G.text, borderRadius:10, outline:"none", fontFamily:"'DM Sans',sans-serif" }} />
+              <button onClick={submitProduct} style={{
+                width:"100%", padding:"12px 14px", border:"none", borderRadius:10,
+                background:"linear-gradient(135deg,#3A6FF8,#2450CC)", color:"#fff",
+                fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif"
+              }}>
+                Add product to POS
               </button>
             </div>
           </div>
