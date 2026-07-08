@@ -1,0 +1,36 @@
+[
+  {
+    "ticketId": "demo-1002",
+    "orderNumber": "demo-1002",
+    "items": [
+      {
+        "productName": "Chicken Kottu",
+        "quantity": 2,
+        "itemPrice": 1800
+      },
+      {
+        "productName": "Lime Juice",
+        "quantity": 1,
+        "itemPrice": 350
+      }
+    ],
+    "receivedAt": "2026-07-08T04:22:15.134Z"
+  },
+  {
+    "ticketId": "demo-1001",
+    "orderNumber": "demo-1001",
+    "items": [
+      {
+        "productName": "Chicken Kottu",
+        "quantity": 2,
+        "itemPrice": 1800
+      },
+      {
+        "productName": "Lime Juice",
+        "quantity": 1,
+        "itemPrice": 350
+      }
+    ],
+    "receivedAt": "2026-07-08T04:22:00.168Z"
+  }
+]

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { G, ORDER_API_BASE_URL } from "../utils/constants";
+import { G, API_BASE_URL } from "../utils/constants";
 
-const getApiBase = () => ORDER_API_BASE_URL || window.location.origin;
+const KOS_ALARM_KEY = "happy-hour-kos-alarm-enabled";
+
+const getApiBase = () => API_BASE_URL || window.location.origin;
 
 const formatPrice = (value) => `Rs. ${Number(value || 0).toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
@@ -31,12 +33,20 @@ const playAlarmTone = (audioContextRef) => {
 export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
   const [tickets, setTickets] = useState([]);
   const [connectionState, setConnectionState] = useState("Connecting");
-  const [alarmEnabled, setAlarmEnabled] = useState(false);
+  const [alarmEnabled, setAlarmEnabled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(KOS_ALARM_KEY) === "true";
+  });
   const [flashTicketId, setFlashTicketId] = useState("");
   const [notice, setNotice] = useState("Waiting for incoming kitchen orders...");
   const audioContextRef = useRef(null);
   const alarmEnabledRef = useRef(false);
   const flashTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(KOS_ALARM_KEY, alarmEnabled ? "true" : "false");
+  }, [alarmEnabled]);
 
   useEffect(() => {
     const loadTickets = async () => {
@@ -95,7 +105,7 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
     };
   }, []);
 
-  const enableAlarm = async () => {
+  const prepareAlarmContext = async () => {
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) {
@@ -107,18 +117,29 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
         audioContextRef.current = new AudioContextClass();
       }
 
-      await audioContextRef.current.resume();
-      setAlarmEnabled(true);
-      alarmEnabledRef.current = true;
-      setNotice("Alarm enabled for new kitchen orders.");
-
-      if (window.Notification && window.Notification.permission === "default") {
-        await window.Notification.requestPermission();
+      if (audioContextRef.current.state !== "running") {
+        await audioContextRef.current.resume();
       }
     } catch {
       setNotice("Unable to enable alarm sound.");
     }
   };
+
+  const enableAlarm = async () => {
+    setAlarmEnabled(true);
+
+    if (window.Notification && window.Notification.permission === "default") {
+      await window.Notification.requestPermission();
+    }
+  };
+
+  useEffect(() => {
+    alarmEnabledRef.current = alarmEnabled;
+    if (alarmEnabled) {
+      setNotice("Alarm enabled for new kitchen orders.");
+      void prepareAlarmContext();
+    }
+  }, [alarmEnabled]);
 
   return (
     <div className="kos-shell">
