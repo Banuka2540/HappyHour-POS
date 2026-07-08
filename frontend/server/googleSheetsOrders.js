@@ -152,6 +152,75 @@ const toOrderRow = (order = {}) => {
   };
 };
 
+const parseItemsJson = (value) => {
+  if (!value) return [];
+
+  if (typeof value === "object") {
+    return Array.isArray(value) ? value : [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const parseItemsText = (value) => {
+  if (!value || typeof value !== "string") return [];
+
+  return value
+    .split("|")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const match = entry.match(/^(.*) x(\d+)$/);
+      if (!match) {
+        return { productName: entry, quantity: 1, itemPrice: 0 };
+      }
+
+      return {
+        productName: match[1].trim(),
+        quantity: Number(match[2]) || 1,
+        itemPrice: 0,
+      };
+    });
+};
+
+const normalizeItemsForKos = (row) => {
+  const itemsJson = parseItemsJson(row.itemsJson);
+  if (itemsJson.length > 0) {
+    return itemsJson.map((item) => ({
+      productName: item?.name || item?.productName || "Item",
+      quantity: Number(item?.qty ?? item?.quantity ?? 1) || 1,
+      itemPrice: Number(item?.price ?? item?.itemPrice ?? 0) || 0,
+    }));
+  }
+
+  return parseItemsText(row.items);
+};
+
+export const fetchRecentOrdersFromGoogleSheet = async ({ limit = 50 } = {}) => {
+  const spreadsheet = buildSpreadsheet();
+  const sheet = await ensureOrderSheet(spreadsheet);
+  await ensureSheetHeaders(sheet);
+
+  const rows = await sheet.getRows({ limit: Math.max(1, Math.min(Number(limit) || 50, 100)) });
+
+  return rows.map((row) => {
+    const data = row.toJSON();
+    const ticketId = String(data.orderId || data.saleId || data.id || "");
+
+    return {
+      ticketId,
+      orderNumber: ticketId,
+      items: normalizeItemsForKos(data),
+      receivedAt: data.timestamp || data.saleDate || new Date().toISOString(),
+    };
+  }).filter((ticket) => ticket.ticketId);
+};
+
 export const appendOrderToGoogleSheet = async (order) => {
   const spreadsheet = buildSpreadsheet();
   const sheet = await ensureOrderSheet(spreadsheet);
