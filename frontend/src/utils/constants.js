@@ -50,6 +50,9 @@ export const globalCss = `
     .kos-ticket-head, .kos-ticket-row { grid-template-columns: 1fr 70px 92px; }
     .kos-ticket-head { font-size:11px; }
     .kos-ticket-row div { font-size:14px !important; }
+    .kos-ticket-top { flex-direction:column; align-items:stretch !important; }
+    .kos-ticket-top > div:last-child { justify-content:space-between; width:100%; }
+    .kos-finish-btn { width:100%; }
   }
 `;
 

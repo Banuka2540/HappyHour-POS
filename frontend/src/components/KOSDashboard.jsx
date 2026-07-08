@@ -3,7 +3,24 @@ import { G, API_BASE_URL } from "../utils/constants";
 
 const KOS_ALARM_KEY = "happy-hour-kos-alarm-enabled";
 
-const getApiBase = () => API_BASE_URL || window.location.origin;
+const getApiBase = () => {
+  if (typeof window === "undefined") {
+    return API_BASE_URL;
+  }
+
+  const configured = (API_BASE_URL || "").trim();
+  const host = window.location.hostname;
+
+  if (configured && !/^http:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/i.test(configured)) {
+    return configured.replace(/\/+$/, "");
+  }
+
+  if (host && !/^(localhost|127\.0\.0\.1)$/i.test(host)) {
+    return `${window.location.protocol}//${host}:4242`;
+  }
+
+  return "http://localhost:4242";
+};
 
 const formatPrice = (value) => `Rs. ${Number(value || 0).toLocaleString("en", { minimumFractionDigits: 2 })}`;
 
@@ -38,6 +55,7 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
     return window.localStorage.getItem(KOS_ALARM_KEY) === "true";
   });
   const [flashTicketId, setFlashTicketId] = useState("");
+  const [finishingTicketId, setFinishingTicketId] = useState("");
   const [notice, setNotice] = useState("Waiting for incoming kitchen orders...");
   const audioContextRef = useRef(null);
   const alarmEnabledRef = useRef(false);
@@ -93,6 +111,12 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
       flashTimerRef.current = window.setTimeout(() => setFlashTicketId(""), 1200);
     });
 
+    source.addEventListener("orderCompleted", (event) => {
+      const payload = JSON.parse(event.data);
+      setTickets((prev) => prev.filter((item) => item.ticketId !== payload.ticketId));
+      setNotice(`Ticket finished: ${payload.ticketId}`);
+    });
+
     source.onerror = () => {
       setConnectionState("Reconnecting");
     };
@@ -130,6 +154,28 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
 
     if (window.Notification && window.Notification.permission === "default") {
       await window.Notification.requestPermission();
+    }
+  };
+
+  const finishTicket = async (ticketId) => {
+    if (!ticketId || finishingTicketId === ticketId) return;
+
+    setFinishingTicketId(ticketId);
+    try {
+      const response = await fetch(`${getApiBase()}/api/kos/orders/${encodeURIComponent(ticketId)}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Unable to finish ticket");
+      }
+
+      setTickets((prev) => prev.filter((ticket) => ticket.ticketId !== ticketId));
+      setNotice(`Finished ticket ${ticketId}`);
+    } catch {
+      setNotice("Unable to finish ticket right now.");
+    } finally {
+      setFinishingTicketId("");
     }
   };
 
@@ -204,11 +250,31 @@ export function KOSDashboard({ onBackToPos, onOpenAdmin }) {
             borderRadius: 18, padding: 18, boxShadow: ticket.ticketId === flashTicketId ? "0 0 0 1px rgba(212,160,23,0.3), 0 0 30px rgba(212,160,23,0.18)" : "none",
             animation: ticket.ticketId === flashTicketId ? "kosPulse 1.2s ease-in-out" : "none"
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div className="kos-ticket-top" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 12 }}>
               <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: G.gold }}>
                 Order #{ticket.orderNumber}
               </div>
-              <div style={{ fontSize: 12, color: G.muted }}>Live</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <div style={{ fontSize: 12, color: G.muted }}>Live</div>
+                <button
+                  onClick={() => finishTicket(ticket.ticketId)}
+                  disabled={finishingTicketId === ticket.ticketId}
+                  className="kos-finish-btn"
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: finishingTicketId === ticket.ticketId ? G.dark3 : "linear-gradient(135deg,#2D7C4A,#1F5E38)",
+                    color: "#fff",
+                    fontWeight: 700,
+                    cursor: finishingTicketId === ticket.ticketId ? "not-allowed" : "pointer",
+                    fontFamily: "'DM Sans',sans-serif",
+                    minHeight: 44,
+                  }}
+                >
+                  {finishingTicketId === ticket.ticketId ? "Finishing..." : "Finish"}
+                </button>
+              </div>
             </div>
 
             <div className="kos-ticket-head">

@@ -129,7 +129,14 @@ const loadKosOrders = async () => {
   try {
     const raw = await fs.readFile(kosOrdersPath, "utf8");
     const parsed = JSON.parse(raw);
-    kosOrders = Array.isArray(parsed) ? parsed : [];
+    const normalizedOrders = Array.isArray(parsed) ? parsed : [];
+    const cleanedOrders = normalizedOrders.filter((ticket) => !String(ticket?.ticketId || ticket?.orderNumber || "").startsWith("demo-"));
+
+    kosOrders = cleanedOrders;
+
+    if (cleanedOrders.length !== normalizedOrders.length) {
+      await persistKosOrders();
+    }
   } catch (error) {
     console.warn("Unable to load KOS orders feed", error);
     kosOrders = [];
@@ -175,6 +182,14 @@ const broadcastKosTicket = (ticket) => {
   }
 };
 
+const broadcastKosCompletion = (ticketId) => {
+  const payload = `event: orderCompleted\ndata: ${JSON.stringify({ ticketId })}\n\n`;
+
+  for (const client of kosClients) {
+    client.write(payload);
+  }
+};
+
 const allowedOrigins = new Set([clientUrl, ...clientUrls]);
 const isVercelPreviewOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
@@ -198,6 +213,24 @@ app.get("/api/health", (_req, res) => {
 
 app.get("/api/kos/orders", (_req, res) => {
   res.json({ ok: true, orders: kosOrders });
+});
+
+app.delete("/api/kos/orders/:ticketId", async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const beforeCount = kosOrders.length;
+    kosOrders = kosOrders.filter((ticket) => ticket.ticketId !== ticketId);
+
+    if (kosOrders.length !== beforeCount) {
+      await persistKosOrders();
+      broadcastKosCompletion(ticketId);
+    }
+
+    return res.json({ ok: true, removed: beforeCount !== kosOrders.length });
+  } catch (error) {
+    console.error("kos ticket completion failed", error);
+    return res.status(500).json({ error: "Failed to complete KOS ticket" });
+  }
 });
 
 app.get("/api/kos/stream", (req, res) => {
