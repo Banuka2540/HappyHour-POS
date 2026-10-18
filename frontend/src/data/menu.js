@@ -54,15 +54,16 @@ export const MENU = [
 
   // Submarines
   { id: 38, name: "Crispy Chicken Submarine", cat: "Submarines", price: 1200, emoji: "", tag: "" },
-  { id: 39, name: "Chicken Sausage Submarine", cat: "Submarines", price: 1200, emoji: "", tag: "" },
+  { id: 39, name: "Chicken Submarine", cat: "Submarines", price: 400, emoji: "", tag: "" },
   { id: 40, name: "Grilled Chicken Submarine (With a Sub Paste)", cat: "Submarines", price: 1200, emoji: "", tag: "" },
   { id: 41, name: "Chilli Chicken Submarine", cat: "Submarines", price: 1200, emoji: "", tag: "" },
   { id: 42, name: "Crispy Prawn Submarine", cat: "Submarines", price: 1400, emoji: "", tag: "" },
   { id: 43, name: "Meatball Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
-  { id: 44, name: "Egg & Cheese Submarine", cat: "Submarines", price: 1000, emoji: "", tag: "" },
+  { id: 44, name: "Chicken Hotdog", cat: "Submarines", price: 170, emoji: "", tag: "" },
+  
 
   // Club Sandwiches
-  { id: 45, name: "Club Sandwich - Egg", cat: "Club Sandwiches", price: 990, emoji: "", tag: "" },
+  { id: 45, name: "EGG Sandwich", cat: "Club Sandwiches", price: 120, emoji: "", tag: "" },
   { id: 46, name: "Club Sandwich - Chicken", cat: "Club Sandwiches", price: 1490, emoji: "", tag: "" },
   { id: 47, name: "Club Sandwich - Seafood", cat: "Club Sandwiches", price: 1690, emoji: "", tag: "" },
   { id: 48, name: "Club Sandwich - Double Cheese", cat: "Club Sandwiches", price: 1590, emoji: "", tag: "" },
@@ -74,7 +75,8 @@ export const MENU = [
   { id: 52, name: "Double Chicken & Cheese Injection Burger", cat: "Burgers", price: 1300, emoji: "", tag: "" },
   { id: 53, name: "Sweet & Sour Chicken Burger", cat: "Burgers", price: 1200, emoji: "", tag: "" },
   { id: 54, name: "Chilli Chicken Burger", cat: "Burgers", price: 1100, emoji: "", tag: "" },
-  { id: 55, name: "Tower Burger", cat: "Burgers", price: 1500, emoji: "", tag: "" },
+  { id: 55, name: "Burger Bun" , cat: "Burgers", price: 150, emoji: "", tag: "" },
+  { id: 5454, name: "Lime Juice" , cat: "Burgers", price: 350, emoji: "", tag: "" },
 
   // Fresh Juices
   { id: 56, name: "Avocado Juice", cat: "Fresh Juices", price: 350, emoji: "", tag: "" },
@@ -155,14 +157,28 @@ export const MENU = [
   { id: 117, name: "Yogurt", cat: "Desserts", price: 100, emoji: "", tag: "" },
   { id: 118, name: "Cake", cat: "Desserts", price: 250, emoji: "", tag: "" },
 
-  { id: 119, name: "Egg Bun", cat: "Buns", price: 130, emoji: "", tag: "" },
-  { id: 120, name: "Sandwhich - Salmon", cat: "Sandwhich", price: 130, emoji: "", tag: "" },
-  { id: 121, name: "Fried Rice Chicken", cat: "Fried Rice", price: 700, emoji: "", tag: "" },
-  { id: 122, name: "Fried Rice Veg", cat: "Fried Rice", price: 500, emoji: "", tag: "" },
-  { id: 123, name: "Pastry", cat: "Pastry", price: 130, emoji: "", tag: "" },
-  { id: 124, name: "Fish Roll", cat: "Fish Bun", price: 150, emoji: "", tag: "" },
+  { id: 127, name: "Biriyani", cat: "Biriyani", price: 700, emoji: "", tag: "" },
+
 
 
 ];
 
-export const CATEGORIES = ["All", ...new Set(MENU.map(i => i.cat))];
+export const ALL_ONLY_CATEGORIES = new Set([
+  "Starters",
+  "Salads",
+  "Soup",
+  "Malaysian Nasi Goreng",
+  "Club Sandwiches",
+  "Burgers",
+  "Bubble Tea",
+  "Shakes",
+  "Mojitos",
+  "Smoothies",
+  "Cold Drinks",
+  "Desserts",
+]);
+
+export const CATEGORIES = [
+  "All",
+  ...new Set(MENU.map(i => i.cat).filter(cat => !ALL_ONLY_CATEGORIES.has(cat))),
+];

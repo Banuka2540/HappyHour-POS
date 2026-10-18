@@ -15,7 +15,7 @@ export function Receipt({ order, discount, serviceType, note, receiptTimestamp }
     <div style={{ background:"#fff", color:"#000000", borderRadius:8, padding:"6px 12px",
       fontFamily:"'Courier New',monospace", fontSize:12, fontWeight:700 }}>
       <div style={{ textAlign:"center", marginBottom:12, marginTop:0, paddingTop:0 }}>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, color:"#000000" }}>HAPPY HOUR</div>
+        <div style={{ fontFamily:"-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif", fontSize:20, color:"#000000" }}>HAPPY HOUR</div>
         <div style={{ fontSize:10, color:"#000000" }}>Restaurant &amp; Cafe</div>
         <div style={{ fontSize:10, color:"#000000" }}>417, Peradeniya Road, Kandy</div>
         <div style={{ fontSize:10, color:"#000000" }}>0774451516</div>

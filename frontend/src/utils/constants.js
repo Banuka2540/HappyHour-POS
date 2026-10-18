@@ -61,11 +61,22 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localho
 const resolveOrderApiBaseUrl = () => {
   const configured = (import.meta.env.VITE_ORDER_API_BASE_URL || "").trim();
 
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const isLocalHost = /^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)$/i.test(host);
+    const isConfiguredLocal = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(?::\d+)?$/i.test(configured);
+
+    // If online but API is configured to a local address, fall back to same-origin
+    if (!isLocalHost && isConfiguredLocal) {
+      return "";
+    }
+  }
+
   // In production, never force requests to localhost; fall back to same-origin serverless routes.
   if (
     import.meta.env.PROD
     && configured
-    && /^http:\/\/localhost(?::\d+)?$/i.test(configured)
+    && /^https?:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/i.test(configured)
   ) {
     return "";
   }

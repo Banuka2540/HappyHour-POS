@@ -11,7 +11,18 @@ const getApiBase = () => {
   const configured = (ORDER_API_BASE_URL || "").trim();
   const host = window.location.hostname;
 
-  if (configured && !/^http:\/\/(localhost|127\.0\.0\.1)(?::\d+)?$/i.test(configured)) {
+  // Determine if the current page hostname is a local address
+  const isLocalHost = /^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)$/i.test(host);
+  
+  // Determine if the configured API base URL is pointing to a local address
+  const isConfiguredLocal = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(?::\d+)?$/i.test(configured);
+
+  // If we are online but the configured URL is a local LAN/localhost IP, use the current origin
+  if (!isLocalHost && isConfiguredLocal) {
+    return window.location.origin;
+  }
+
+  if (configured) {
     return configured.replace(/\/+$/, "");
   }
 
@@ -19,7 +30,7 @@ const getApiBase = () => {
     return window.location.origin;
   }
 
-  return configured || "http://localhost:4242";
+  return "http://localhost:4242";
 };
 
 const formatPrice = (value) => `Rs. ${Number(value || 0).toLocaleString("en", { minimumFractionDigits: 2 })}`;

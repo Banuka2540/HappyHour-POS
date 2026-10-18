@@ -193,16 +193,7 @@ const broadcastKosCompletion = (ticketId) => {
 const allowedOrigins = new Set([clientUrl, ...clientUrls]);
 const isVercelPreviewOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.has(origin) || isVercelPreviewOrigin(origin)) {
-      callback(null, true);
-      return;
-    }
-
-    callback(new Error(`Origin not allowed by CORS: ${origin}`));
-  },
-}));
+app.use(cors());
 app.use(express.json());
 
 void loadKosOrders();
@@ -369,6 +360,6 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Payment server running on http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Payment server running on http://0.0.0.0:${port}`);
 });

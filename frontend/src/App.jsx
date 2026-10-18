@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 
-import { MENU } from "./data/menu";
+import { MENU, ALL_ONLY_CATEGORIES } from "./data/menu";
 import { G, globalCss, API_BASE_URL, ORDER_API_BASE_URL, ADMIN_PIN, LEDGER_KEYS, CUSTOM_MENU_KEY } from "./utils/constants";
 import { fmt, todayKey, readLedger, writeLedger, createSaleSnapshot, clearSaleDraft, printReceipt } from "./utils/helpers";
 
@@ -106,10 +106,14 @@ export default function HappyHourPOS() {
     : undefined;
 
   const menuCatalog = [...MENU, ...customProducts];
-  const menuCategories = ["All", ...new Set(menuCatalog.map(i => i.cat))];
+  const menuCategories = [
+    "All",
+    ...new Set(menuCatalog.map(i => i.cat).filter(cat => !ALL_ONLY_CATEGORIES.has(cat))),
+  ];
 
+  const normalizeCategory = category => String(category || "").trim().toLowerCase();
   const filtered = menuCatalog.filter(i => {
-    const catOk = activeCat === "All" || i.cat === activeCat;
+    const catOk = activeCat === "All" || normalizeCategory(i.cat) === normalizeCategory(activeCat);
     const searchOk = !search || i.name.toLowerCase().includes(search.toLowerCase());
     return catOk && searchOk;
   });
